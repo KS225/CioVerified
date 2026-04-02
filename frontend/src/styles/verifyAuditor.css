@@ -1,0 +1,229 @@
+
+.verify-container {
+  padding: 30px;
+  background: #f8fafc;
+  min-height: 100vh;
+
+  max-width: 1200px;   /* 🔥 important */
+  margin: auto;        /* center */
+}
+.page-title {
+  font-size: 28px;
+  font-weight: 600;
+  margin-bottom: 20px;
+}
+
+/* GRID */
+.auditor-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 25px;
+}
+/* CARD */
+.auditor-card {
+  background: white;
+  border-radius: 18px;
+  padding: 20px;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.06);
+  transition: 0.3s;
+  border: 1px solid #f1f5f9;
+}
+
+.auditor-card:hover {
+  transform: translateY(-6px);
+}
+
+
+/* HEADER */
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.card-header h3 {
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.badge {
+  padding: 5px 12px;
+  border-radius: 999px;
+  font-size: 12px;
+  text-transform: capitalize;
+}
+
+.badge.submitted {
+  background: #fff3cd;
+  color: #856404;
+}
+
+.badge.verified {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+.badge.rejected {
+  background: #fee2e2;
+  color: #991b1b;
+}
+/* BODY */
+.card-body p {
+  margin: 6px 0;
+  font-size: 14px;
+}
+
+/* LINKS */
+.card-links {
+  margin: 10px 0;
+}
+
+.card-links a {
+  display: inline-block;
+  margin-top: 8px;
+  color: #ff6b00;
+  font-weight: 500;
+  text-decoration: none;
+}
+/* BUTTON */
+.verify-btn {
+  width: 100%;
+  padding: 10px;
+  border: none;
+  border-radius: 10px;
+  background: #ff6b00;
+  color: white;
+  font-weight: 600;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.verify-btn:hover {
+  background: #e55a00;
+}
+
+/* EMPTY */
+.empty-text {
+  color: #777;
+}
+
+/* MODAL */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.4);
+  backdrop-filter: blur(4px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.modal {
+  background: white;
+  padding: 25px;
+  border-radius: 16px;
+  width: 350px;
+  text-align: center;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+}
+
+.cred-box {
+  background: #f1f5f9;
+  padding: 10px;
+  border-radius: 10px;
+  margin: 15px 0;
+}
+
+.cred-box span {
+  font-weight: 600;
+}
+
+/* MODAL BUTTONS */
+.modal-actions {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.modal-actions button {
+  flex: 1;
+  padding: 8px;
+  border: none;
+  border-radius: 8px;
+  background: #2563eb;
+  color: white;
+  cursor: pointer;
+}
+
+.close-btn {
+  margin-top: 15px;
+  padding: 8px 20px;
+  border: none;
+  border-radius: 8px;
+  background: #e5e7eb;
+  cursor: pointer;
+}
+
+.top-bar {
+  display: flex;
+  gap: 15px;
+  margin-bottom: 25px;
+}
+
+.top-bar input {
+  flex: 2;
+  padding: 12px;
+  border-radius: 12px;
+  border: 1px solid #e5e7eb;
+  font-size: 14px;
+}
+
+.top-bar select {
+  flex: 1;
+  padding: 10px;
+  border-radius: 12px;
+  border: 1px solid #e5e7eb;
+}
+.card-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 15px;
+}
+
+.verify-btn {
+  flex: 2;
+  padding: 10px;
+  border-radius: 10px;
+  background: #ff6b00;
+  color: white;
+  border: none;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.verify-btn:hover {
+  background: #e55a00;
+}
+
+.reject-btn {
+  flex: 1;
+  padding: 10px;
+  border-radius: 10px;
+  background: #ef4444;
+  color: white;
+  border: none;
+  cursor: pointer;
+}
+
+.reject-btn:hover {
+  background: #dc2626;
+}
+.empty-text {
+  text-align: center;
+  color: #888;
+  margin-top: 40px;
+}

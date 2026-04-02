@@ -1,0 +1,1966 @@
+import { useState } from "react";
+import "../../styles/applyCertification.css";
+import API from "../../services/api";
+
+function CompanyApplication() {
+  // ================= VALIDATION REGEX =================
+  const phoneRegex = /^\d{10}$/;
+  const aadhaarRegex = /^\d{12}$/;
+  const panRegex = /^[A-Z]{5}[0-9]{4}[A-Z]{1}$/;
+  const pincodeRegex = /^\d{6}$/;
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  const websiteRegex =
+    /^(https?:\/\/)?(www\.)?[a-zA-Z0-9-]+\.[a-zA-Z]{2,}(\/\S*)?$/;
+
+  // optional file state
+  const [files, setFiles] = useState({
+    gstDoc: null,
+    sezDoc: null,
+    companyProfile: null,
+    pitchDeck: null,
+    certifications: [],
+  });
+  const [errors, setErrors] = useState({});
+  const handleFileChange = (e) => {
+    const { name, files: selectedFiles } = e.target;
+
+    setFiles((prev) => ({
+      ...prev,
+      [name]:
+        name === "certifications"
+          ? Array.from(selectedFiles) // ✅ multiple files
+          : selectedFiles[0] || null, // ✅ single file
+    }));
+  };
+  const [step, setStep] = useState(1);
+  const [agreed, setAgreed] = useState(false);
+  const [formData, setFormData] = useState({
+    companyDetails: { hasGST: "" },
+    owners: [
+      {
+        name: "",
+        designation: "",
+        email: "",
+        phone: "",
+        experience: "",
+        aadhaar: "",
+        pan: "",
+      },
+    ],
+    partners: [],
+    businessType: "",
+    products: [],
+    solutions: [],
+  });
+
+  const handleOwnerChange = (index, e) => {
+    const { name, value } = e.target;
+    const updated = [...formData.owners];
+    updated[index][name] = value;
+    setFormData({ ...formData, owners: updated });
+    setErrors((prev) => ({
+      ...prev,
+      [`owner_${index}_${name}`]: "",
+    }));
+  };
+
+  const validateStep = () => {
+    // ================= STEP 1 =================
+    if (step === 1) {
+      const c = formData.companyDetails;
+      let newErrors = {};
+
+    if (!c.contactPerson?.trim()) {
+  newErrors.contactPerson = "Contact person is required";
+}
+
+      if (!c.organisationName)
+        newErrors.organisationName = "Organisation name required";
+
+      if (!c.registeredAddress)
+        newErrors.registeredAddress = "Address required";
+
+      if (!c.country) newErrors.country = "Country required";
+      if (!c.state) newErrors.state = "State required";
+      if (!c.city) newErrors.city = "City required";
+
+      if (!c.pincode) newErrors.pincode = "Pincode required";
+      else if (!pincodeRegex.test(c.pincode))
+        newErrors.pincode = "Invalid pincode";
+
+      if (!c.officialEmail) newErrors.officialEmail = "Email required";
+      else if (!emailRegex.test(c.officialEmail))
+        newErrors.officialEmail = "Invalid email";
+
+      if (c.website && !websiteRegex.test(c.website))
+        newErrors.website = "Invalid website";
+
+      if (!c.contactNumber) newErrors.contactNumber = "Contact required";
+      else if (!phoneRegex.test(c.contactNumber))
+        newErrors.contactNumber = "Invalid number";
+
+      if (c.hasGST === "yes" && !c.gstinNumber)
+        newErrors.gstinNumber = "GSTIN required";
+
+      if (c.hasGST === "yes" && !files.gstDoc)
+        newErrors.gstDoc = "GST document required";
+
+      if (c.hasGST === "no" && !files.sezDoc)
+        newErrors.sezDoc = "SEZ document required";
+
+      if (Object.keys(newErrors).length > 0) {
+        setErrors(newErrors);
+        return false;
+      }
+
+      setErrors({});
+    }
+
+    // ================= STEP 2 =================
+    if (step === 2) {
+      let newErrors = {};
+
+      formData.owners.forEach((o, i) => {
+        if (!o.name) newErrors[`owner_${i}_name`] = "Name required";
+
+        if (!o.email) newErrors[`owner_${i}_email`] = "Email required";
+        else if (!emailRegex.test(o.email))
+          newErrors[`owner_${i}_email`] = "Invalid email";
+
+        if (!o.phone) newErrors[`owner_${i}_phone`] = "Phone required";
+        else if (!phoneRegex.test(o.phone))
+          newErrors[`owner_${i}_phone`] = "Invalid phone";
+
+        if (o.aadhaar && !aadhaarRegex.test(o.aadhaar))
+          newErrors[`owner_${i}_aadhaar`] = "Invalid Aadhaar";
+
+        if (o.pan && !panRegex.test(o.pan))
+          newErrors[`owner_${i}_pan`] = "Invalid PAN";
+      });
+
+      if (Object.keys(newErrors).length > 0) {
+        setErrors(newErrors);
+        return false;
+      }
+
+      setErrors({});
+    }
+
+    // ================= STEP 3 =================
+    if (step === 3) {
+      let newErrors = {};
+
+      if (!formData.businessType)
+        newErrors.businessType = "Select business type";
+
+      if (
+        (formData.businessType === "product" ||
+          formData.businessType === "both") &&
+        formData.products.length === 0
+      ) {
+        newErrors.products = "Add at least one product";
+      }
+
+      if (
+        (formData.businessType === "solution" ||
+          formData.businessType === "both") &&
+        formData.solutions.length === 0
+      ) {
+        newErrors.solutions = "Add at least one solution";
+      }
+const errors = {};
+
+if (!productForm.ipStatus) {
+  errors.ipStatus = "Please select patent/trademark status";
+}
+
+if (
+  ["Patent", "Trademark", "Both"].includes(productForm.ipStatus) &&
+  !productForm.ipProof
+) {
+  errors.ipProof = "Please upload patent/trademark proof";
+}
+
+if (!productForm.package || productForm.package.length === 0) {
+  errors.package = "Please select at least one package";
+}
+
+// ✅ Package compulsory (at least one checkbox)
+if (!solutionForm.package || solutionForm.package.length === 0) {
+  errors.package = "Please select at least one package";
+}
+
+// ✅ Remark compulsory
+if (!solutionForm.remark || !solutionForm.remark.trim()) {
+  errors.remark = "Remark is required";
+}
+      if (!agreed) newErrors.agreed = "You must accept disclaimer";
+
+      if (Object.keys(newErrors).length > 0) {
+        setErrors(newErrors);
+        return false;
+      }
+
+      setErrors({});
+    }
+
+    // ================= STEP 4 =================
+
+    if (step === 4) {
+      let newErrors = {};
+
+      if (!files.companyProfile)
+        newErrors.companyProfile = "Upload company profile";
+
+      if (!files.pitchDeck) newErrors.pitchDeck = "Upload pitch deck";
+
+      if (hasOtherCert === "yes" && files.certifications.length === 0) {
+  newErrors.certifications = "Upload at least one certification file";
+}
+      if (Object.keys(newErrors).length > 0) {
+        setErrors(newErrors);
+        return false;
+      }
+
+      setErrors({});
+    }
+
+    return true;
+  };
+  /* ================= HANDLERS ================= */
+  const handleCompanyChange = (e) => {
+    const { name, value } = e.target;
+
+    setFormData({
+      ...formData,
+      companyDetails: {
+        ...formData.companyDetails,
+        [name]: value,
+      },
+    });
+
+    // ✅ clear error for that field
+    setErrors((prev) => ({ ...prev, [name]: "" }));
+  };
+
+  const addOwner = () => {
+    setFormData({
+      ...formData,
+      owners: [
+        ...formData.owners,
+        {
+          name: "",
+          designation: "",
+          email: "",
+          phone: "",
+          experience: "",
+          aadhaar: "",
+          pan: "",
+        },
+      ],
+    });
+  };
+
+  const removeOwner = (i) => {
+    const updated = formData.owners.filter((_, index) => index !== i);
+    setFormData({ ...formData, owners: updated });
+  };
+
+  const addPartner = () => {
+    setFormData({
+      ...formData,
+      partners: [
+        ...formData.partners,
+        {
+          name: "",
+          designation: "",
+          email: "",
+          phone: "",
+        },
+      ],
+    });
+  };
+
+  const removePartner = (i) => {
+    const updated = formData.partners.filter((_, index) => index !== i);
+    setFormData({ ...formData, partners: updated });
+  };
+
+  const [hasOtherCert, setHasOtherCert] = useState("");
+
+  // ✅ INITIAL STATES FIXED
+  const initialProduct = {
+    productName: "",
+    category: "",
+    description: "",
+    industryServed: "",
+    teamSize: "",
+    version: "",
+    deploymentType: "",
+    pricingModel: "",
+    customersCount: "",
+    majorClients: "",
+    integrations: "",
+    keyFeatures: "",
+    securityStandards: "",
+    uptimeSLA: "",
+    roadmap: "",
+    ipStatus: null,
+    ipProof: null,
+    package: [],
+    remark: "",
+  };
+
+  const initialSolution = {
+    solutionName: "",
+    category: "",
+    description: "",
+    industryServed: "",
+    teamSize: "",
+    servicesProvided: "",
+    projectsCompleted: "",
+    ongoingProjects: "",
+    customersCount: "",
+    majorClients: "",
+    toolsUsed: "",
+    integrations: "",
+    methodology: "",
+    certifications: "",
+    ipStatus: null,
+    ipProof: null,
+    package: [],
+    remark: "",
+  };
+
+  const [productForm, setProductForm] = useState(initialProduct);
+  const [solutionForm, setSolutionForm] = useState(initialSolution);
+  const [productErrors, setProductErrors] = useState({});
+  const [solutionErrors, setSolutionErrors] = useState({});
+  const [editProductIndex, setEditProductIndex] = useState(null);
+  const [editSolutionIndex, setEditSolutionIndex] = useState(null);
+
+  const numberFieldsProduct = ["teamSize", "customersCount"];
+  const numberFieldsSolution = [
+    "teamSize",
+    "projectsCompleted",
+    "ongoingProjects",
+    "customersCount",
+  ];
+
+  const textFieldsProduct = [
+  "productName",
+  "description",
+  "majorClients",
+  "integrations",
+  "keyFeatures",
+  "remark",
+];
+
+  const textFieldsSolution = [
+  "solutionName",
+  "description",
+  "majorClients",
+  "integrations",
+  "remark",
+];
+
+  const isNumber = (value) => /^\d+$/.test(String(value).trim());
+  const hasNumber = (value) => /\d/.test(String(value));
+  const isTextOnly = (value) => !hasNumber(value);
+
+  const validateProductForm = () => {
+    let newErrors = {};
+
+    if (!productForm.productName?.trim())
+      newErrors.productName = "Product name is required";
+    if (!productForm.category) newErrors.category = "Category is required";
+    if (!productForm.description?.trim())
+      newErrors.description = "Description is required";
+    if (!productForm.industryServed)
+      newErrors.industryServed = "Industry is required";
+    if (!productForm.deploymentType)
+      newErrors.deploymentType = "Deployment type is required";
+    if (!productForm.pricingModel)
+      newErrors.pricingModel = "Pricing model is required";
+
+    numberFieldsProduct.forEach((field) => {
+      if (productForm[field] && !isNumber(productForm[field])) {
+        newErrors[field] = "Numbers only";
+      }
+    });
+
+    textFieldsProduct.forEach((field) => {
+      if (productForm[field] && !isTextOnly(productForm[field])) {
+        newErrors[field] = "Text only";
+      }
+    });
+
+    if (
+      ["Patent", "Trademark", "Both"].includes(productForm.ipStatus) &&
+      !productForm.ipProof
+    ) {
+      newErrors.ipProof = "Please upload patent / trademark proof";
+    }
+
+    setProductErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const validateSolutionForm = () => {
+    let newErrors = {};
+
+    if (!solutionForm.solutionName?.trim())
+      newErrors.solutionName = "Solution name is required";
+    if (!solutionForm.category) newErrors.category = "Category is required";
+    if (!solutionForm.description?.trim())
+      newErrors.description = "Description is required";
+    if (!solutionForm.industryServed)
+      newErrors.industryServed = "Industry is required";
+    if (!solutionForm.servicesProvided)
+      newErrors.servicesProvided = "Services required";
+    if (!solutionForm.methodology)
+      newErrors.methodology = "Methodology is required";
+
+    numberFieldsSolution.forEach((field) => {
+      if (solutionForm[field] && !isNumber(solutionForm[field])) {
+        newErrors[field] = "Numbers only";
+      }
+    });
+
+    textFieldsSolution.forEach((field) => {
+      if (solutionForm[field] && !isTextOnly(solutionForm[field])) {
+        newErrors[field] = "Text only";
+      }
+    });
+
+    if (
+      ["Patent", "Trademark", "Both"].includes(solutionForm.ipStatus) &&
+      !solutionForm.ipProof
+    ) {
+      newErrors.ipProof = "Please upload patent / trademark proof";
+    }
+
+    setSolutionErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  /* ================= PRODUCT ================= */
+  const handleProductChange = (e) => {
+    const { name, value, type, checked, files } = e.target;
+
+    if (type === "checkbox") {
+      setProductForm((prev) => {
+        const existing = prev.package || [];
+        return {
+          ...prev,
+          package: checked
+            ? [...existing, value]
+            : existing.filter((item) => item !== value),
+        };
+      });
+      return;
+    }
+
+    if (type === "file") {
+      setProductForm((prev) => ({
+        ...prev,
+        [name]: files[0] || null,
+      }));
+
+      setProductErrors((prev) => ({
+        ...prev,
+        [name]: "",
+      }));
+      return;
+    }
+
+    setProductForm((prev) => ({
+      ...prev,
+      [name]: value,
+      ...(name === "ipStatus" && value === "None" ? { ipProof: null } : {}),
+    }));
+
+    setProductErrors((prev) => ({
+      ...prev,
+      [name]: "",
+    }));
+  };
+
+  /* ================= SOLUTION ================= */
+  const handleSolutionChange = (e) => {
+    const { name, value, type, checked, files } = e.target;
+
+    if (type === "checkbox") {
+      setSolutionForm((prev) => {
+        const existing = prev.package || [];
+        return {
+          ...prev,
+          package: checked
+            ? [...existing, value]
+            : existing.filter((item) => item !== value),
+        };
+      });
+      return;
+    }
+
+    if (type === "file") {
+      setSolutionForm((prev) => ({
+        ...prev,
+        [name]: files[0] || null,
+      }));
+
+      setSolutionErrors((prev) => ({
+        ...prev,
+        [name]: "",
+      }));
+      return;
+    }
+
+    setSolutionForm((prev) => ({
+      ...prev,
+      [name]: value,
+      ...(name === "ipStatus" && value === "None" ? { ipProof: null } : {}),
+    }));
+
+    setSolutionErrors((prev) => ({
+      ...prev,
+      [name]: "",
+    }));
+  };
+
+  const resetProductForm = () => {
+    setProductForm(initialProduct);
+    setProductErrors({});
+    setEditProductIndex(null);
+  };
+
+  const resetSolutionForm = () => {
+    setSolutionForm(initialSolution);
+    setSolutionErrors({});
+    setEditSolutionIndex(null);
+  };
+
+  const addProduct = () => {
+    if (!validateProductForm()) return;
+
+    if (editProductIndex !== null) {
+      const updated = [...formData.products];
+      updated[editProductIndex] = { ...productForm };
+
+      setFormData({
+        ...formData,
+        products: updated,
+      });
+    } else {
+      setFormData({
+        ...formData,
+        products: [...formData.products, { ...productForm }],
+      });
+    }
+
+    resetProductForm();
+  };
+
+  const editProduct = (index) => {
+    setProductForm({ ...formData.products[index] });
+    setEditProductIndex(index);
+    setProductErrors({});
+  };
+
+  const removeProduct = (i) => {
+    const updated = formData.products.filter((_, index) => index !== i);
+    setFormData({ ...formData, products: updated });
+
+    if (editProductIndex === i) {
+      resetProductForm();
+    }
+  };
+
+  const addSolution = () => {
+    if (!validateSolutionForm()) return;
+
+    if (editSolutionIndex !== null) {
+      const updated = [...formData.solutions];
+      updated[editSolutionIndex] = { ...solutionForm };
+
+      setFormData({
+        ...formData,
+        solutions: updated,
+      });
+    } else {
+      setFormData({
+        ...formData,
+        solutions: [...formData.solutions, { ...solutionForm }],
+      });
+    }
+
+    resetSolutionForm();
+  };
+
+  const editSolution = (index) => {
+    setSolutionForm({ ...formData.solutions[index] });
+    setEditSolutionIndex(index);
+    setSolutionErrors({});
+  };
+
+  const removeSolution = (i) => {
+    const updated = formData.solutions.filter((_, index) => index !== i);
+    setFormData({ ...formData, solutions: updated });
+
+    if (editSolutionIndex === i) {
+      resetSolutionForm();
+    }
+  };
+
+  const handleSubmitFinal = async () => {
+  try {
+    const form = new FormData();
+
+    // ✅ Create cleaned JSON copy so File objects inside products/solutions
+    // are replaced with backend-friendly keys
+    const cleanedData = {
+  ...formData,
+  products: formData.products.map((p) => ({
+    ...p,
+    ipProof: p.ipProof ? "ipProof" : null,
+  })),
+  solutions: formData.solutions.map((s) => ({
+    ...s,
+    ipProof: s.ipProof ? "ipProof" : null,
+  })),
+};
+
+    // ✅ Append JSON data
+    form.append("data", JSON.stringify(cleanedData));
+
+    // ✅ Append top-level files
+    Object.entries(files).forEach(([key, value]) => {
+      if (!value) return;
+
+      if (Array.isArray(value)) {
+        value.forEach((file) => form.append(key, file));
+      } else {
+        form.append(key, value);
+      }
+    });
+
+    formData.products.forEach((product) => {
+  if (product.ipProof) {
+    form.append("ipProof", product.ipProof);
+  }
+});
+
+formData.solutions.forEach((solution) => {
+  if (solution.ipProof) {
+    form.append("ipProof", solution.ipProof);
+  }
+});
+
+    // ✅ Get token
+    const token = localStorage.getItem("token");
+
+    if (!token) {
+      alert("Please login first");
+      return;
+    }
+
+    // ✅ API CALL
+    const res = await API.post("/applications/submit", form, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    // ✅ SUCCESS AFTER API RESPONSE
+    alert("Application submitted successfully!");
+    console.log(res.data);
+
+    // ✅ RESET FORM
+    setFormData({
+      companyDetails: { hasGST: "" },
+      owners: [
+        {
+          name: "",
+          designation: "",
+          email: "",
+          phone: "",
+          experience: "",
+          aadhaar: "",
+          pan: "",
+        },
+      ],
+      partners: [],
+      businessType: "",
+      products: [],
+      solutions: [],
+    });
+
+    setFiles({
+      gstDoc: null,
+      sezDoc: null,
+      companyProfile: null,
+      pitchDeck: null,
+      certifications: [],
+    });
+
+    setProductForm(initialProduct);
+    setSolutionForm(initialSolution);
+    setProductErrors({});
+    setSolutionErrors({});
+    setEditProductIndex(null);
+    setEditSolutionIndex(null);
+
+    setStep(1);
+  } catch (err) {
+    console.error(err);
+    alert("Submission failed");
+  }
+};
+
+  return (
+    <div className="apply-wrapper">
+      <div className="apply-card">
+        <h2>Apply for CIO Certification</h2>
+
+        {/* ================= PROGRESS ================= */}
+        <div className="progress-bar">
+          {[1, 2, 3, 4].map((s) => (
+            <div key={s} className="progress-step">
+              <div className={`circle ${step >= s ? "active" : ""}`}>{s}</div>
+              <span>
+                {s === 1 && "Company"}
+                {s === 2 && "Owners"}
+                {s === 3 && "Items"}
+                {s === 4 && "Evidence"}
+              </span>
+            </div>
+          ))}
+        </div>
+
+        {/* ================= SECTION 1 ================= */}
+        {step === 1 && (
+          <>
+            <h3>Company Details</h3>
+
+            <input
+  name="contactPerson"
+  placeholder="Contact Person Name"
+  onChange={(e) => {
+    const value = e.target.value.replace(/[^a-zA-Z\s]/g, "");
+    handleCompanyChange({
+      target: { name: "contactPerson", value },
+    });
+  }}
+/>
+{errors.contactPerson && (
+  <span className="error">{errors.contactPerson}</span>
+)}
+            
+            <input
+              name="organisationName"
+              placeholder="Organisation Name"
+              onChange={handleCompanyChange}
+            />
+            {errors.organisationName && (
+              <span className="error">{errors.organisationName}</span>
+            )}
+
+            <input
+              name="brandName"
+              placeholder="Brand Name"
+              onChange={handleCompanyChange}
+            />
+
+           <textarea
+  name="registeredAddress"
+  placeholder="Registered Address"
+  onChange={handleCompanyChange}
+/>
+{errors.registeredAddress && (
+  <span className="error">{errors.registeredAddress}</span>
+)}
+            <textarea
+              name="operationalAddress"
+              placeholder="Operational Address"
+              onChange={handleCompanyChange}
+            />
+
+            <input
+              name="billingAddress"
+              placeholder="Billing Address"
+              onChange={handleCompanyChange}
+            />
+            <input
+              name="shippingAddress"
+              placeholder="Shipping Address"
+              onChange={handleCompanyChange}
+            />
+
+            <div className="grid">
+             <input
+  name="country"
+  placeholder="Country"
+  onChange={handleCompanyChange}
+/>
+{errors.country && (
+  <span className="error">{errors.country}</span>
+)}
+              <input
+                name="state"
+                placeholder="State"
+                onChange={handleCompanyChange}
+              />
+            </div>
+{errors.state && (
+  <span className="error">{errors.state}</span>
+)}
+            <div className="grid">
+              <input
+                name="city"
+                placeholder="City"
+                onChange={handleCompanyChange}
+              />
+              {errors.city && (
+  <span className="error">{errors.city}</span>
+)}
+              <input
+                name="pincode"
+                placeholder="Pincode"
+                onChange={(e) => {
+                  const value = e.target.value.replace(/\D/g, "");
+                  handleCompanyChange({
+                    target: { name: "pincode", value },
+                  });
+                }}
+                maxLength={6}
+              />
+              {errors.pincode && (
+                <span className="error">{errors.pincode}</span>
+              )}
+            </div>
+
+            <input
+              name="website"
+              placeholder="Website"
+              onChange={handleCompanyChange}
+            />
+            {errors.website && <span className="error">{errors.website}</span>}
+
+            <input
+              name="officialEmail"
+              placeholder="Official Email"
+              onChange={handleCompanyChange}
+            />
+            {errors.officialEmail && (
+              <span className="error">{errors.officialEmail}</span>
+            )}
+            <input
+              name="contactNumber"
+              placeholder="Contact Number"
+              maxLength={10}
+              onChange={(e) => {
+                const value = e.target.value.replace(/\D/g, "");
+                handleCompanyChange({
+                  target: { name: "contactNumber", value },
+                });
+              }}
+            />
+            {errors.contactNumber && (
+              <span className="error">{errors.contactNumber}</span>
+            )}
+
+            <div className="grid">
+              <input
+                name="yearOfIncorporation"
+                placeholder="Year of Incorporation"
+                onChange={handleCompanyChange}
+              />
+
+              <input
+                name="companySize"
+                placeholder="Company Size"
+                onChange={handleCompanyChange}
+              />
+            </div>
+
+            <input
+              name="industry"
+              placeholder="Industry"
+              onChange={(e) => {
+                const value = e.target.value.replace(/[^a-zA-Z\s]/g, "");
+                handleCompanyChange({
+                  target: { name: "industry", value },
+                });
+              }}
+            />
+
+            {/* GST */}
+            <div className="gst-block">
+              <label>Do you have GSTIN?</label>
+
+              <div className="radio-group">
+                <label>
+                  <input
+                    type="radio"
+                    name="hasGST"
+                    value="yes"
+                    onChange={handleCompanyChange}
+                  />
+                  Yes
+                </label>
+                <label>
+                  <input
+                    type="radio"
+                    name="hasGST"
+                    value="no"
+                    onChange={handleCompanyChange}
+                  />
+                  No
+                </label>
+              </div>
+            </div>
+
+            {formData.companyDetails.hasGST === "yes" && (
+              <>
+                {/* GSTIN INPUT */}
+                <div className="form-row">
+                  <input
+                    name="gstinNumber"
+                    placeholder="GSTIN Number"
+                    onChange={handleCompanyChange}
+                  />
+                  {errors.gstinNumber && (
+                    <span className="error">{errors.gstinNumber}</span>
+                  )}
+                </div>
+
+                {/* FILE UPLOAD */}
+                <div className="file-row">
+                  <span>Incorporation Certificate</span>
+
+                  <input
+                    type="file"
+                    name="gstDoc"
+                    onChange={handleFileChange}
+                  />
+
+                  {errors.gstDoc && (
+                    <span className="error">{errors.gstDoc}</span>
+                  )}
+                </div>
+              </>
+            )}
+            {formData.companyDetails.hasGST === "no" && (
+              <div className="file-row">
+                <span>SEZ Document</span>
+
+                <input type="file" name="sezDoc" onChange={handleFileChange} />
+
+                {errors.sezDoc && (
+                  <span className="error">{errors.sezDoc}</span>
+                )}
+              </div>
+            )}
+
+            <button
+              className="btn-primary"
+              onClick={() => {
+                if (validateStep()) setStep(2);
+              }}
+            >
+              Next
+            </button>
+          </>
+        )}
+
+        {/* ================= SECTION 2 ================= */}
+        {step === 2 && (
+          <>
+            <h3>Owners</h3>
+
+            {formData.owners.map((o, i) => (
+              <div key={i} className="card">
+                <div>
+                  <input
+                    name="name"
+                    placeholder="Name"
+                    value={o.name || ""}
+                    onChange={(e) => handleOwnerChange(i, e)}
+                  />
+                  {errors[`owner_${i}_name`] && (
+                    <span className="error">{errors[`owner_${i}_name`]}</span>
+                  )}
+                </div>
+
+                <div>
+                  <input
+                    name="designation"
+                    placeholder="Designation"
+                    value={o.designation || ""}
+                    onChange={(e) => handleOwnerChange(i, e)}
+                  />
+                </div>
+
+                <div>
+                  <input
+                    name="email"
+                    placeholder="Email"
+                    value={o.email || ""}
+                    onChange={(e) => handleOwnerChange(i, e)}
+                  />
+                  {errors[`owner_${i}_email`] && (
+                    <span className="error">{errors[`owner_${i}_email`]}</span>
+                  )}
+                </div>
+
+                <div>
+                  <input
+                    name="phone"
+                    placeholder="Phone"
+                    value={o.phone || ""}
+                    onChange={(e) => {
+                      const value = e.target.value.replace(/\D/g, "");
+                      handleOwnerChange(i, {
+                        target: { name: "phone", value },
+                      });
+                    }}
+                    maxLength={10}
+                  />
+                  {errors[`owner_${i}_phone`] && (
+                    <span className="error">{errors[`owner_${i}_phone`]}</span>
+                  )}
+                </div>
+
+                <div>
+                  <input
+                    name="experience"
+                    placeholder="Experience"
+                    value={o.experience || ""}
+                    onChange={(e) => handleOwnerChange(i, e)}
+                  />
+
+                  <div>
+                    <input
+                      name="aadhaar"
+                      placeholder="Aadhaar Number"
+                      value={o.aadhaar || ""}
+                      onChange={(e) => {
+                        const value = e.target.value.replace(/\D/g, "");
+                        handleOwnerChange(i, {
+                          target: { name: "aadhaar", value },
+                        });
+                      }}
+                      maxLength={12}
+                    />
+                    {errors[`owner_${i}_aadhaar`] && (
+                      <span className="error">
+                        {errors[`owner_${i}_aadhaar`]}
+                      </span>
+                    )}
+                  </div>
+                </div>
+
+                <input
+                  name="pan"
+                  placeholder="PAN Number"
+                  value={o.pan || ""}
+                  onChange={(e) => {
+                    const value = e.target.value.toUpperCase();
+                    handleOwnerChange(i, {
+                      target: { name: "pan", value },
+                    });
+                  }}
+                />
+                {errors[`owner_${i}_pan`] && (
+                  <span className="error">{errors[`owner_${i}_pan`]}</span>
+                )}
+
+                {i > 0 && (
+                  <button className="btn-remove" onClick={() => removeOwner(i)}>
+                    Remove
+                  </button>
+                )}
+              </div>
+            ))}
+            <button className="btn-add" onClick={addOwner}>
+              + Add Owner
+            </button>
+            <h3>Partners</h3>
+
+            {formData.partners.map((p, i) => (
+              <div key={i} className="card">
+                <div className="grid">
+                  <input
+                    name="name"
+                    placeholder="Name"
+                    value={p.name || ""}
+                    onChange={(e) => {
+                      const updated = [...formData.partners];
+                      updated[i].name = e.target.value;
+                      setFormData({ ...formData, partners: updated });
+                    }}
+                  />
+
+                  <input
+                    name="designation"
+                    placeholder="Designation"
+                    value={p.designation || ""}
+                    onChange={(e) => {
+                      const updated = [...formData.partners];
+                      updated[i].designation = e.target.value;
+                      setFormData({ ...formData, partners: updated });
+                    }}
+                  />
+
+                  <input
+                    name="email"
+                    placeholder="Email"
+                    value={p.email || ""}
+                    onChange={(e) => {
+                      const updated = [...formData.partners];
+                      updated[i].email = e.target.value;
+                      setFormData({ ...formData, partners: updated });
+                    }}
+                  />
+
+                  <input
+                    name="phone"
+                    placeholder="Phone"
+                    value={p.phone || ""}
+                    onChange={(e) => {
+                      const value = e.target.value.replace(/\D/g, "");
+                      const updated = [...formData.partners];
+                      updated[i].phone = value;
+                      setFormData({ ...formData, partners: updated });
+                    }}
+                    maxLength={10}
+                  />
+                </div>
+
+                <button className="btn-remove" onClick={() => removePartner(i)}>
+                  Remove
+                </button>
+              </div>
+            ))}
+
+            <button className="btn-add" onClick={addPartner}>
+              + Add Partner
+            </button>
+            <div className="button-group">
+              <button className="btn-back" onClick={() => setStep(1)}>
+                Back
+              </button>
+              <button
+                className="btn-primary"
+                onClick={() => {
+                  if (validateStep()) setStep(3);
+                }}
+              >
+                Next
+              </button>
+            </div>
+          </>
+        )}
+
+        {/* ================= SECTION 3 ================= */}
+        {step === 3 && (
+  <>
+    <h3>Business Type</h3>
+
+    <select
+      value={formData.businessType}
+      onChange={(e) => {
+        setFormData({
+          ...formData,
+          businessType: e.target.value,
+        });
+
+        setErrors((prev) => ({ ...prev, businessType: "" }));
+      }}
+    >
+      <option value="">Select</option>
+      <option value="product">Product</option>
+      <option value="solution">Solution</option>
+      <option value="both">Both</option>
+    </select>
+    {errors.businessType && (
+      <span className="error">{errors.businessType}</span>
+    )}
+
+    {/* ================= DROPDOWN DATA ================= */}
+    {(() => {
+      const productCategories = [
+        "ERP",
+        "CRM",
+        "HRMS",
+        "Accounting",
+        "Operational SaaS",
+        "Integration / Data",
+        "AI",
+        "Security",
+        "Vertical Software",
+      ];
+      const industries = [
+        "Finance",
+        "Healthcare",
+        "Retail",
+        "Manufacturing",
+        "Education",
+        "Government",
+      ];
+      const deploymentTypes = ["Cloud", "On-Premise", "Hybrid"];
+      const pricingModels = [
+        "Subscription",
+        "One-time",
+        "Usage-based",
+        "Freemium",
+      ];
+
+      const solutionCategories = [
+        "Implementation Partner",
+        "System Integrator",
+        "Managed Services",
+        "ITES",
+        "ISO / Compliance Auditor",
+      ];
+      const methodologies = [
+        "Agile",
+        "Waterfall",
+        "ITIL",
+        "DevOps",
+        "Hybrid",
+      ];
+      const servicesList = [
+        "ERP Implementation",
+        "CRM Implementation",
+        "Cloud Migration",
+        "Security Audit",
+        "Support Services",
+      ];
+
+      return (
+        <>
+          {/* ================= PRODUCTS ================= */}
+          {(formData.businessType === "product" ||
+            formData.businessType === "both") && (
+            <>
+              <h3>{editProductIndex !== null ? "Edit Product" : "Add Product"}</h3>
+
+              <input
+                name="productName"
+                placeholder="Product Name"
+                value={productForm.productName}
+                onChange={handleProductChange}
+              />
+              {productErrors.productName && (
+                <span className="error">{productErrors.productName}</span>
+              )}
+
+              <select
+                name="category"
+                value={productForm.category}
+                onChange={handleProductChange}
+              >
+                <option value="">Category</option>
+                {productCategories.map((c, i) => (
+                  <option key={i}>{c}</option>
+                ))}
+              </select>
+              {productErrors.category && (
+                <span className="error">{productErrors.category}</span>
+              )}
+
+              <textarea
+                name="description"
+                placeholder="Description"
+                value={productForm.description}
+                onChange={handleProductChange}
+              />
+              {productErrors.description && (
+                <span className="error">{productErrors.description}</span>
+              )}
+
+              <select
+                name="industryServed"
+                value={productForm.industryServed}
+                onChange={handleProductChange}
+              >
+                <option value="">Industry</option>
+                {industries.map((i, idx) => (
+                  <option key={idx}>{i}</option>
+                ))}
+              </select>
+              {productErrors.industryServed && (
+                <span className="error">{productErrors.industryServed}</span>
+              )}
+
+              <input
+                name="teamSize"
+                placeholder="Team Size"
+                value={productForm.teamSize}
+                onChange={handleProductChange}
+              />
+              {productErrors.teamSize && (
+                <span className="error">{productErrors.teamSize}</span>
+              )}
+
+              <input
+                name="version"
+                placeholder="Version"
+                value={productForm.version}
+                onChange={handleProductChange}
+              />
+              {productErrors.version && (
+                <span className="error">{productErrors.version}</span>
+              )}
+
+              <select
+                name="deploymentType"
+                value={productForm.deploymentType}
+                onChange={handleProductChange}
+              >
+                <option value="">Deployment</option>
+                {deploymentTypes.map((d, i) => (
+                  <option key={i}>{d}</option>
+                ))}
+              </select>
+              {productErrors.deploymentType && (
+                <span className="error">{productErrors.deploymentType}</span>
+              )}
+
+              <select
+                name="pricingModel"
+                value={productForm.pricingModel}
+                onChange={handleProductChange}
+              >
+                <option value="">Pricing</option>
+                {pricingModels.map((p, i) => (
+                  <option key={i}>{p}</option>
+                ))}
+              </select>
+              {productErrors.pricingModel && (
+                <span className="error">{productErrors.pricingModel}</span>
+              )}
+
+              <input
+                name="customersCount"
+                placeholder="Customers Count"
+                value={productForm.customersCount}
+                onChange={handleProductChange}
+              />
+              {productErrors.customersCount && (
+                <span className="error">{productErrors.customersCount}</span>
+              )}
+
+              <input
+                name="majorClients"
+                placeholder="Major Clients"
+                value={productForm.majorClients}
+                onChange={handleProductChange}
+              />
+              {productErrors.majorClients && (
+                <span className="error">{productErrors.majorClients}</span>
+              )}
+
+              <input
+                name="integrations"
+                placeholder="Integrations"
+                value={productForm.integrations}
+                onChange={handleProductChange}
+              />
+              {productErrors.integrations && (
+                <span className="error">{productErrors.integrations}</span>
+              )}
+
+              <input
+                name="keyFeatures"
+                placeholder="Key Features"
+                value={productForm.keyFeatures}
+                onChange={handleProductChange}
+              />
+              {productErrors.keyFeatures && (
+                <span className="error">{productErrors.keyFeatures}</span>
+              )}
+
+              <input
+                name="securityStandards"
+                placeholder="Security Standards"
+                value={productForm.securityStandards}
+                onChange={handleProductChange}
+              />
+              {productErrors.securityStandards && (
+                <span className="error">{productErrors.securityStandards}</span>
+              )}
+
+              <input
+                name="uptimeSLA"
+                placeholder="Uptime SLA"
+                value={productForm.uptimeSLA}
+                onChange={handleProductChange}
+              />
+              {productErrors.uptimeSLA && (
+                <span className="error">{productErrors.uptimeSLA}</span>
+              )}
+
+              <input
+                name="roadmap"
+                placeholder="Roadmap"
+                value={productForm.roadmap}
+                onChange={handleProductChange}
+              />
+              {productErrors.roadmap && (
+                <span className="error">{productErrors.roadmap}</span>
+              )}
+
+             <select
+  name="ipStatus"
+  value={productForm.ipStatus || ""}
+  onChange={handleProductChange}
+  required
+>
+  <option value="">Any patent or trademark?</option>
+  <option value="None">No</option>
+  <option value="Patent">Patent</option>
+  <option value="Trademark">Trademark</option>
+  <option value="Both">Both</option>
+</select>
+
+{productErrors.ipStatus && (
+  <span className="error">{productErrors.ipStatus}</span>
+)}
+
+{["Patent", "Trademark", "Both"].includes(productForm.ipStatus) && (
+  <div className="file-row">
+    <span>Upload Patent / Trademark Proof</span>
+    <input
+      type="file"
+      name="ipProof"
+      onChange={handleProductChange}
+      required
+    />
+    {productErrors.ipProof && (
+      <span className="error">{productErrors.ipProof}</span>
+    )}
+  </div>
+)}
+
+<div className="package-block">
+  <label className="section-label">
+    What are you looking for in this product? <span className="required">*</span>
+  </label>
+
+  <div className="checkbox-group">
+    {["Certification", "Verification", "Marketing"].map((pkg) => (
+      <label key={pkg} className="checkbox-item">
+        <input
+          type="checkbox"
+          name="package"
+          value={pkg}
+          checked={productForm.package.includes(pkg)}
+          onChange={handleProductChange}
+        />
+        {pkg}
+      </label>
+    ))}
+  </div>
+
+  {productErrors.package && (
+    <span className="error">{productErrors.package}</span>
+  )}
+</div>
+              <input
+                name="remark"
+                placeholder="Remark"
+                value={productForm.remark}
+                onChange={handleProductChange}
+              />
+              {productErrors.remark && (
+                <span className="error">{productErrors.remark}</span>
+              )}
+
+              <button type="button" className="btn-add" onClick={addProduct}>
+                {editProductIndex !== null ? "Update Product" : "Add Product"}
+              </button>
+
+              {editProductIndex !== null && (
+                <button type="button" className="btn-back" onClick={resetProductForm}>
+                  Cancel Edit
+                </button>
+              )}
+
+              {/* TABLE */}
+              <div className="table-container">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Name</th>
+                      <th>Description</th>
+                      <th>Category</th>
+                      <th>Industry</th>
+                      <th>Team</th>
+                      <th>Version</th>
+                      <th>Deployment</th>
+                      <th>Pricing</th>
+                      <th>Customers</th>
+                      <th>Clients</th>
+                      <th>Integrations</th>
+                      <th>Features</th>
+                      <th>Security</th>
+                      <th>SLA</th>
+                      <th>Roadmap</th>
+                      <th>Patent/Trademark</th>
+                      <th>IP Proof</th>
+                      <th>Package</th>
+                      <th>Remark</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {formData.products.map((p, i) => (
+                      <tr key={i}>
+                        <td>{p.productName}</td>
+                        <td>{p.description}</td>
+                        <td>{p.category}</td>
+                        <td>{p.industryServed}</td>
+                        <td>{p.teamSize}</td>
+                        <td>{p.version}</td>
+                        <td>{p.deploymentType}</td>
+                        <td>{p.pricingModel}</td>
+                        <td>{p.customersCount}</td>
+                        <td>{p.majorClients}</td>
+                        <td>{p.integrations}</td>
+                        <td>{p.keyFeatures}</td>
+                        <td>{p.securityStandards}</td>
+                        <td>{p.uptimeSLA}</td>
+                        <td>{p.roadmap}</td>
+                        <td>{p.ipStatus || "-"}</td>
+                        <td>{p.ipProof ? p.ipProof.name : "-"}</td>
+                        <td>{p.package?.join(", ")}</td>
+                        <td>{p.remark}</td>
+                        <td>
+                          <button
+                            type="button"
+                            className="btn-edit"
+                            onClick={() => editProduct(i)}
+                          >
+                            Edit
+                          </button>
+                          <button
+                            type="button"
+                            className="btn-remove"
+                            onClick={() => removeProduct(i)}
+                          >
+                            X
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </>
+          )}
+
+          {/* ================= SOLUTIONS ================= */}
+          {(formData.businessType === "solution" ||
+            formData.businessType === "both") && (
+            <>
+              <h3>{editSolutionIndex !== null ? "Edit Solution" : "Add Solution"}</h3>
+
+              <input
+                name="solutionName"
+                placeholder="Solution Name"
+                value={solutionForm.solutionName}
+                onChange={handleSolutionChange}
+              />
+              {solutionErrors.solutionName && (
+                <span className="error">{solutionErrors.solutionName}</span>
+              )}
+
+              <select
+                name="category"
+                value={solutionForm.category}
+                onChange={handleSolutionChange}
+              >
+                <option value="">Category</option>
+                {solutionCategories.map((c, i) => (
+                  <option key={i}>{c}</option>
+                ))}
+              </select>
+              {solutionErrors.category && (
+                <span className="error">{solutionErrors.category}</span>
+              )}
+
+              <textarea
+                name="description"
+                placeholder="Description"
+                value={solutionForm.description}
+                onChange={handleSolutionChange}
+              />
+              {solutionErrors.description && (
+                <span className="error">{solutionErrors.description}</span>
+              )}
+
+              <select
+                name="industryServed"
+                value={solutionForm.industryServed}
+                onChange={handleSolutionChange}
+              >
+                <option value="">Industry</option>
+                {industries.map((i, idx) => (
+                  <option key={idx}>{i}</option>
+                ))}
+              </select>
+              {solutionErrors.industryServed && (
+                <span className="error">{solutionErrors.industryServed}</span>
+              )}
+
+              <input
+                name="teamSize"
+                placeholder="Team Size"
+                value={solutionForm.teamSize}
+                onChange={handleSolutionChange}
+              />
+              {solutionErrors.teamSize && (
+                <span className="error">{solutionErrors.teamSize}</span>
+              )}
+
+              <select
+                name="servicesProvided"
+                value={solutionForm.servicesProvided}
+                onChange={handleSolutionChange}
+              >
+                <option value="">Services</option>
+                {servicesList.map((s, i) => (
+                  <option key={i}>{s}</option>
+                ))}
+              </select>
+              {solutionErrors.servicesProvided && (
+                <span className="error">{solutionErrors.servicesProvided}</span>
+              )}
+
+              <input
+                name="projectsCompleted"
+                placeholder="Projects Completed"
+                value={solutionForm.projectsCompleted}
+                onChange={handleSolutionChange}
+              />
+              {solutionErrors.projectsCompleted && (
+                <span className="error">{solutionErrors.projectsCompleted}</span>
+              )}
+
+              <input
+                name="ongoingProjects"
+                placeholder="Ongoing Projects"
+                value={solutionForm.ongoingProjects}
+                onChange={handleSolutionChange}
+              />
+              {solutionErrors.ongoingProjects && (
+                <span className="error">{solutionErrors.ongoingProjects}</span>
+              )}
+
+              <input
+                name="customersCount"
+                placeholder="Customers Count"
+                value={solutionForm.customersCount}
+                onChange={handleSolutionChange}
+              />
+              {solutionErrors.customersCount && (
+                <span className="error">{solutionErrors.customersCount}</span>
+              )}
+
+              <input
+                name="majorClients"
+                placeholder="Major Clients"
+                value={solutionForm.majorClients}
+                onChange={handleSolutionChange}
+              />
+              {solutionErrors.majorClients && (
+                <span className="error">{solutionErrors.majorClients}</span>
+              )}
+
+              <input
+                name="toolsUsed"
+                placeholder="Tools Used"
+                value={solutionForm.toolsUsed}
+                onChange={handleSolutionChange}
+              />
+              {solutionErrors.toolsUsed && (
+                <span className="error">{solutionErrors.toolsUsed}</span>
+              )}
+
+              <input
+                name="integrations"
+                placeholder="Integrations"
+                value={solutionForm.integrations}
+                onChange={handleSolutionChange}
+              />
+              {solutionErrors.integrations && (
+                <span className="error">{solutionErrors.integrations}</span>
+              )}
+
+              <select
+                name="methodology"
+                value={solutionForm.methodology}
+                onChange={handleSolutionChange}
+              >
+                <option value="">Methodology</option>
+                {methodologies.map((m, i) => (
+                  <option key={i}>{m}</option>
+                ))}
+              </select>
+              {solutionErrors.methodology && (
+                <span className="error">{solutionErrors.methodology}</span>
+              )}
+
+              <input
+                name="certifications"
+                placeholder="Certifications"
+                value={solutionForm.certifications}
+                onChange={handleSolutionChange}
+              />
+              {solutionErrors.certifications && (
+                <span className="error">{solutionErrors.certifications}</span>
+              )}
+
+             <div className="solution-block">
+  <label className="section-label">
+    What are you looking for in this solution? <span className="required">*</span>
+  </label>
+
+  <div className="checkbox-group">
+    {["Certification", "Verification", "Marketing"].map((pkg) => (
+      <label key={pkg} className="checkbox-item">
+        <input
+          type="checkbox"
+          name="package"
+          value={pkg}
+          checked={solutionForm.package.includes(pkg)}
+          onChange={handleSolutionChange}
+        />
+        {pkg}
+      </label>
+    ))}
+  </div>
+
+  {solutionErrors.package && (
+    <span className="error">{solutionErrors.package}</span>
+  )}
+</div>
+
+              <input
+                name="remark"
+                placeholder="Remark / Notes"
+                value={solutionForm.remark}
+                onChange={handleSolutionChange}
+              />
+              {solutionErrors.remark && (
+                <span className="error">{solutionErrors.remark}</span>
+              )}
+
+              <button type="button" className="btn-add" onClick={addSolution}>
+                {editSolutionIndex !== null ? "Update Solution" : "Add Solution"}
+              </button>
+
+              {editSolutionIndex !== null && (
+                <button type="button" className="btn-back" onClick={resetSolutionForm}>
+                  Cancel Edit
+                </button>
+              )}
+
+              {/* TABLE */}
+              <div className="table-container">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Name</th>
+                      <th>Category</th>
+                      <th>Industry</th>
+                      <th>Team</th>
+                      <th>Services</th>
+                      <th>Projects</th>
+                      <th>Ongoing</th>
+                      <th>Customers</th>
+                      <th>Clients</th>
+                      <th>Tools</th>
+                      <th>Integrations</th>
+                      <th>Methodology</th>
+                      <th>Certifications</th>
+                      <th>Package</th>
+                      <th>Remark</th>
+                      <th>Patent/Trademark</th>
+                      <th>IP Proof</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {formData.solutions.map((s, i) => (
+                      <tr key={i}>
+                        <td>{s.solutionName}</td>
+                        <td>{s.category}</td>
+                        <td>{s.industryServed}</td>
+                        <td>{s.teamSize}</td>
+                        <td>{s.servicesProvided}</td>
+                        <td>{s.projectsCompleted}</td>
+                        <td>{s.ongoingProjects}</td>
+                        <td>{s.customersCount}</td>
+                        <td>{s.majorClients}</td>
+                        <td>{s.toolsUsed}</td>
+                        <td>{s.integrations}</td>
+                        <td>{s.methodology}</td>
+                        <td>{s.certifications}</td>
+                        <td>{s.package?.join(", ")}</td>
+                        <td>{s.remark}</td>
+                        <td>{s.ipStatus || "-"}</td>
+                        <td>{s.ipProof ? s.ipProof.name : "-"}</td>
+                        <td>
+                          <button
+                            type="button"
+                            className="btn-edit"
+                            onClick={() => editSolution(i)}
+                          >
+                            Edit
+                          </button>
+                          <button
+                            type="button"
+                            className="btn-remove"
+                            onClick={() => removeSolution(i)}
+                          >
+                            X
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </>
+          )}
+        </>
+      );
+    })()}
+
+    <div className="button-group">
+      <button className="btn-back" onClick={() => setStep(2)}>
+        Back
+      </button>
+      <button
+        className="btn-primary"
+        onClick={() => {
+          if (validateStep()) setStep(4);
+        }}
+      >
+        Next
+      </button>
+    </div>
+
+    <div className="disclaimer-box">
+      <p>
+        <strong>Disclaimer:</strong> If the company does not achieve the
+        required score during evaluation, no certification will be
+        granted. In such cases, only verification support will be
+        provided. No refunds will be issued under any circumstances once
+        the application process has begun.
+      </p>
+
+      <label className="disclaimer-check">
+        <input
+          type="checkbox"
+          checked={agreed}
+          onChange={(e) => setAgreed(e.target.checked)}
+        />
+        I have read and agree to the above terms.
+      </label>
+      {errors.agreed && <span className="error">{errors.agreed}</span>}
+    </div>
+  </>
+)}
+
+        {/* ================= SECTION 4 ================= */}
+        {step === 4 && (
+          <>
+            <h3>Evidence & Documents</h3>
+
+            <div className="file-row">
+              <span>Company Profile</span>
+              <input
+                type="file"
+                name="companyProfile"
+                onChange={handleFileChange}
+              />
+              {errors.companyProfile && (
+                <span className="error">{errors.companyProfile}</span>
+              )}
+            </div>
+
+            <div className="file-row">
+              <span>Pitch Deck</span>
+              <input type="file" name="pitchDeck" onChange={handleFileChange} />
+              {errors.pitchDeck && (
+                <span className="error">{errors.pitchDeck}</span>
+              )}
+            </div>
+
+            <div className="gst-block">
+              <label>Do you have any other certifications?</label>
+
+              <div className="radio-group">
+                <label>
+                  <input
+                    type="radio"
+                    name="otherCert"
+                    value="yes"
+                    onChange={(e) => setHasOtherCert(e.target.value)}
+                  />
+                  Yes
+                </label>
+
+                <label>
+                  <input
+                    type="radio"
+                    name="otherCert"
+                    value="no"
+                    onChange={(e) => setHasOtherCert(e.target.value)}
+                  />
+                  No
+                </label>
+              </div>
+            </div>
+            {hasOtherCert === "yes" && (
+              <div className="file-row">
+                <span>Upload Certifications</span>
+                <input
+                  type="file"
+                  name="certifications"
+                  multiple
+                  onChange={handleFileChange}
+                />
+                {errors.certifications && (
+                  <span className="error">{errors.certifications}</span>
+                )}
+              </div>
+            )}
+            <div className="button-group">
+              <button className="btn-back" onClick={() => setStep(3)}>
+                Back
+              </button>
+
+              <button
+                className="btn-primary"
+                onClick={() => {
+                  if (validateStep()) {
+                    handleSubmitFinal();
+                  }
+                }}
+              >
+                Submit
+              </button>
+            </div>
+          </>
+        )}
+      </div>
+    </div>
+  );
+}
+
+export default CompanyApplication;

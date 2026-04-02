@@ -1,0 +1,425 @@
+
+/* ================= WRAPPER ================= */
+.apply-wrapper {
+  max-width: 750px;   /* ✅ perfect compact size */
+  margin: 40px auto;
+  padding: 0 16px;
+}
+
+/* ================= CARD ================= */
+.apply-card {
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 20px 28px;
+  border: 1px solid #e6e9ee;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.06);
+}
+
+/* TOP LINE */
+.apply-card::before {
+  content: "";
+  display: block;
+  height: 4px;
+  width: 100%;
+  background: linear-gradient(90deg, #e85d00, #ffb703);
+  border-radius: 6px 6px 0 0;
+  margin: -30px -35px 25px -35px;
+}
+
+/* ================= HEADINGS ================= */
+.apply-card h2 {
+  text-align: center;
+  font-size: 26px;
+  margin-bottom: 10px;
+}
+
+.apply-card h3 {
+  margin: 25px 0 12px;
+  font-size: 18px;
+  color: #333;
+}
+
+/* ================= PROGRESS BAR ================= */
+.progress-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: relative;
+  margin: 30px 0 40px;
+}
+
+/* LINE */
+.progress-bar::before {
+  content: "";
+  position: absolute;
+  top: 16px;
+  left: 0;
+  width: 100%;
+  height: 3px;
+  background: #e5e7eb;
+  z-index: 0;
+}
+
+/* EACH STEP */
+.progress-step {
+  position: relative;
+  text-align: center;
+  flex: 1;
+  z-index: 1;
+}
+
+/* CIRCLE */
+.circle {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: #e5e7eb;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 6px;
+  font-size: 13px;
+  font-weight: 600;
+  transition: 0.3s;
+}
+
+/* ACTIVE STEP */
+.circle.active {
+  background: linear-gradient(90deg, #e85d00, #ffb703);
+  color: white;
+}
+
+/* LABEL */
+.progress-step span {
+  font-size: 13px;
+  color: #777;
+}
+
+/* ACTIVE LABEL */
+.circle.active + span {
+  color: #000;
+  font-weight: 600;
+}
+
+/* ================= INPUT ================= */
+input,
+textarea,
+select {
+  width: 100%;
+  height: 35px;   /* ⬅️ reduced */
+  margin-bottom: 8px;
+  padding: 0 12px;
+  border: 1px solid #cfd6df;
+  border-radius: 6px;
+  font-size: 14px;
+  transition: all 0.2s ease;
+}
+
+/* TEXTAREA */
+textarea {
+  height: 70px;
+  padding-top: 8px;
+}
+
+/* FOCUS EFFECT */
+input:focus,
+textarea:focus,
+select:focus {
+  border-color: #0b3d91;
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(11, 61, 145, 0.1);
+}
+
+/* ================= ERROR MESSAGES ================= */
+.error {
+  display: block;
+  font-size: 12px;
+  color: #dc2626;
+  margin: -4px 0 8px;
+  font-weight: 500;
+}
+
+/* INPUT ERROR BORDER */
+input.error-border,
+textarea.error-border {
+  border-color: #dc2626;
+}
+
+/* ================= GRID ================= */
+.grid {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 8px;
+}
+
+.grid input {
+  flex: 1;
+}
+
+/* ================= FILE ================= */
+.file-row {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  margin-bottom: 12px;
+}
+
+.file-row span {
+  width: 200px;
+  font-size: 14px;
+  color: #555;
+}
+
+.file-row input[type="file"] {
+  flex: 1;
+  padding: 6px;
+  background: #f9fafb;
+}
+
+/* GST BLOCK */
+.gst-block {
+  margin-top: 20px;
+}
+
+/* QUESTION TEXT */
+.gst-block label {
+  font-size: 18px;
+  font-weight: 600;
+  display: block;
+  margin-bottom: 10px;
+}
+
+/* RADIO GROUP */
+.radio-group {
+  display: flex;
+  align-items: center;
+  gap: 25px;
+  margin-bottom: 20px;
+}
+
+/* RADIO LABEL */
+.radio-group label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 15px;
+  cursor: pointer;
+}
+
+/* RADIO SIZE FIX */
+.radio-group input[type="radio"] {
+  width: 16px;
+  height: 16px;
+  margin: 0;
+}
+
+/* PRIMARY BUTTON */
+.btn-primary {
+  height: 36px;              /* ⬅️ reduced from ~40-44 */
+  padding: 0 16px;           /* ⬅️ less horizontal padding */
+  font-size: 14px;
+  border-radius: 6px;
+  font-weight: 500;
+}
+
+/* BACK BUTTON */
+.btn-back {
+  height: 36px;
+  padding: 0 16px;
+  font-size: 14px;
+}
+
+/* ADD BUTTON */
+.btn-add {
+  padding: 6px 12px;
+  font-size: 13px;
+}
+
+/* REMOVE BUTTON */
+.btn-remove {
+  padding: 4px 8px;
+  font-size: 12px;
+}
+/* ================= CARD (OWNERS/PARTNERS) ================= */
+.card {
+  border: 1px solid #e5e7eb;
+  padding: 16px;
+  border-radius: 8px;
+  margin-bottom: 15px;
+  background: #fafafa;
+}
+
+/* ================= BUTTONS ================= */
+.button-group {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 25px;
+}
+
+.btn-primary {
+  height: 38px;
+  padding: 0 20px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  background: linear-gradient(90deg, #e85d00, #ffb703);
+  color: white;
+  font-weight: 600;
+}
+
+.btn-back {
+  height: 38px;
+  padding: 0 20px;
+  background: #e5e7eb;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.btn-add {
+  background: #16a34a;
+  color: white;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 6px;
+  margin: 10px 0;
+  cursor: pointer;
+}
+
+.btn-remove {
+  background: #dc2626;
+  color: white;
+  border: none;
+  padding: 5px 10px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+/* ================= TABLE ================= */
+/* ================= TABLE CONTAINER ================= */
+.table-container {
+  width: 100%;
+  overflow-x: auto;
+  margin-top: 15px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  background: #fff;
+}
+
+/* ================= TABLE ================= */
+table {
+  width: 100%;
+  min-width: 800px;
+  border-collapse: collapse;
+  font-size: 13px;   /* ⬅️ reduce text size */
+}
+
+/* HEADER */
+th {
+  background: #f9fafb;
+  padding: 10px;
+  text-align: left;
+  font-weight: 600;
+  color: #444;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+/* ROWS */
+td {
+  padding: 10px;
+  border-bottom: 1px solid #f1f1f1;
+  color: #333;
+  vertical-align: top;
+}
+
+/* ROW HOVER */
+tr:hover {
+  background: #f9fafb;
+}
+
+/* ================= FIX LONG TEXT ================= */
+td {
+  max-width: 150px;
+  word-wrap: break-word;
+}
+
+/* ================= SCROLLBAR ================= */
+.table-container::-webkit-scrollbar {
+  height: 6px;
+}
+
+.table-container::-webkit-scrollbar-thumb {
+  background: #ccc;
+  border-radius: 6px;
+}
+
+.table-container::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+/* ================= DISCLAIMER ================= */
+.disclaimer-box {
+  margin-top: 25px;
+  padding: 16px;
+  background: #fff7ed;
+  border: 1px solid #ffd7b5;
+  border-radius: 8px;
+}
+
+/* TEXT */
+.disclaimer-box p {
+  font-size: 13px;
+  color: #444;
+  line-height: 1.5;
+  margin-bottom: 12px;
+}
+
+/* FIX ALIGNMENT */
+.disclaimer-check {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+/* FIX CHECKBOX SIZE */
+.disclaimer-check input {
+  width: 16px;
+  height: 16px;
+  margin: 0;
+}
+/* ================= PACKAGE BLOCK ================= */
+.package-block {
+  margin: 20px 0;
+}
+
+.section-label {
+  font-size: 16px;
+  font-weight: 600;
+  margin-bottom: 12px;
+  display: block;
+}
+
+/* FIX CHECKBOX LAYOUT */
+.checkbox-group {
+  display: flex;
+  gap: 30px;
+  flex-wrap: wrap;
+}
+
+/* EACH CHECKBOX */
+.checkbox-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+/* FIX SIZE */
+.checkbox-item input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  margin: 0;
+}

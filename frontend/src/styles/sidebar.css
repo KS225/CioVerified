@@ -1,0 +1,34 @@
+.sidebar {
+  width: 220px;
+  height: calc(100vh - 60px);
+  background: #111827;
+  color: white;
+  position: fixed;
+  left: 0;
+  top: 77px; /* 🔥 push below navbar */
+  padding: 20px;
+}
+
+.sidebar h2 {
+  margin-bottom: 30px;
+}
+
+.sidebar-item {
+  padding: 12px;
+  margin-bottom: 10px;
+  cursor: pointer;
+  border-radius: 6px;
+}
+
+.sidebar-item:hover {
+  background: #1f2937;
+}
+
+.sidebar-item.active {
+  background: #e85d00;
+}
+
+.sidebar-item.logout {
+  margin-top: 40px;
+  color: #f87171;
+}

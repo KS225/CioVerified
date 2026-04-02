@@ -1,0 +1,299 @@
+/* =========================
+   PAGE
+========================= */
+.status-page {
+  padding: 40px;
+  background: linear-gradient(135deg, #f8fafc, #eef2ff);
+  min-height: 100vh;
+  font-family: "Inter", sans-serif;
+}
+
+/* =========================
+   CARD (PREMIUM GLASS)
+========================= */
+.application-card {
+  max-width: 1000px;
+  margin: 24px auto;
+  border-radius: 20px;
+  padding: 22px 28px;
+
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(14px);
+
+  box-shadow:
+    0 10px 30px rgba(0, 0, 0, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.6);
+
+  transition: all 0.3s ease;
+}
+
+.application-card:hover {
+  transform: translateY(-4px) scale(1.01);
+  box-shadow:
+    0 20px 40px rgba(0, 0, 0, 0.12);
+}
+
+/* =========================
+   HEADER
+========================= */
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: pointer;
+}
+
+.app-id {
+  font-weight: 600;
+  font-size: 16px;
+  color: #111827;
+}
+
+/* =========================
+   STATUS BADGE (PREMIUM)
+========================= */
+.status-badge {
+  padding: 6px 14px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.4px;
+  backdrop-filter: blur(6px);
+}
+
+/* COLORS */
+.status-badge.submitted {
+  background: rgba(59, 130, 246, 0.1);
+  color: #2563eb;
+}
+
+.status-badge.invoice_sent {
+  background: rgba(239, 68, 68, 0.1);
+  color: #dc2626;
+}
+
+.status-badge.invoice_accepted {
+  background: rgba(34, 197, 94, 0.12);
+  color: #16a34a;
+}
+
+/* =========================
+   MESSAGE
+========================= */
+.status-message {
+  margin: 20px 0;
+  padding: 14px;
+  border-radius: 12px;
+  text-align: center;
+  font-size: 13px;
+
+  background: linear-gradient(135deg, #fff7ed, #ffedd5);
+  color: #9a3412;
+
+  box-shadow: inset 0 1px 4px rgba(0,0,0,0.05);
+}
+
+/* =========================
+   TIMELINE
+========================= */
+.timeline {
+  position: relative;
+  display: flex;
+  justify-content: space-between;
+  margin-top: 40px;
+}
+
+/* BASE LINE */
+.timeline::before {
+  content: "";
+  position: absolute;
+  top: 18px;
+  left: 0;
+  right: 0;
+  height: 6px;
+  background: #e5e7eb;
+  border-radius: 999px;
+}
+
+/* PROGRESS */
+.timeline-progress {
+  position: absolute;
+  top: 18px;
+  left: 0;
+  height: 6px;
+  border-radius: 999px;
+
+  background: linear-gradient(90deg, #22c55e, #4ade80);
+  box-shadow: 0 0 12px rgba(34, 197, 94, 0.6);
+
+  transition: width 0.6s ease;
+}
+
+/* =========================
+   STEP
+========================= */
+.timeline-step {
+  position: relative;
+  text-align: center;
+  flex: 1;
+  z-index: 2;
+}
+
+/* CIRCLE */
+.timeline-circle {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+
+  background: #e5e7eb;
+  margin: auto;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  font-size: 14px;
+  font-weight: bold;
+
+  transition: all 0.3s ease;
+}
+
+/* COMPLETED */
+.timeline-step.completed .timeline-circle {
+  background: linear-gradient(135deg, #22c55e, #16a34a);
+  color: white;
+
+  box-shadow:
+    0 6px 14px rgba(34, 197, 94, 0.4),
+    0 0 10px rgba(34, 197, 94, 0.5);
+}
+
+/* ACTIVE (GLOW EFFECT) */
+.timeline-step.active .timeline-circle {
+  background: linear-gradient(135deg, #fb923c, #f97316);
+  color: white;
+
+  transform: scale(1.2);
+
+  box-shadow:
+    0 0 0 6px rgba(251, 146, 60, 0.15),
+    0 8px 20px rgba(249, 115, 22, 0.6);
+}
+
+/* LABEL */
+.timeline-label {
+  margin-top: 12px;
+  font-size: 12px;
+  color: #6b7280;
+  max-width: 110px;
+  margin-left: auto;
+  margin-right: auto;
+  line-height: 1.4;
+}
+
+.timeline-step.active .timeline-label {
+  color: #111827;
+  font-weight: 600;
+}
+
+/* =========================
+   INVOICE BOX
+========================= */
+.invoice-box {
+  margin-top: 30px;
+  padding: 20px;
+  border-radius: 14px;
+
+  background: rgba(255, 255, 255, 0.9);
+
+  border: 1px solid #f1f5f9;
+
+  box-shadow:
+    0 10px 25px rgba(0, 0, 0, 0.06);
+}
+
+.invoice-amount {
+  font-size: 22px;
+  font-weight: 700;
+  color: #111827;
+}
+
+/* =========================
+   BUTTONS (PREMIUM)
+========================= */
+.invoice-actions button {
+  margin-right: 12px;
+  padding: 9px 16px;
+  border-radius: 10px;
+  border: none;
+
+  font-size: 13px;
+  font-weight: 600;
+
+  cursor: pointer;
+  transition: all 0.25s ease;
+}
+
+/* DOWNLOAD */
+.btn-download {
+  background: #e2e8f0;
+}
+
+/* ACCEPT */
+.btn-accept {
+  background: linear-gradient(135deg, #22c55e, #16a34a);
+  color: white;
+}
+
+/* ISSUE */
+.btn-issue {
+  background: linear-gradient(135deg, #fb923c, #f97316);
+  color: white;
+}
+
+/* HOVER */
+.invoice-actions button:hover {
+  transform: translateY(-2px) scale(1.02);
+  box-shadow: 0 6px 14px rgba(0,0,0,0.12);
+}
+
+/* CLICK */
+.invoice-actions button:active {
+  transform: scale(0.96);
+}
+
+/* =========================
+   ISSUE BOX
+========================= */
+.issue-box textarea {
+  width: 100%;
+  margin-top: 10px;
+  padding: 10px;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+  outline: none;
+  resize: none;
+}
+
+/* =========================
+   WAIT STATE
+========================= */
+.waiting-text {
+  font-size: 13px;
+  color: #6b7280;
+  margin-top: 8px;
+}
+.cancelled {
+  border: 1px solid #fecaca;
+  background: #fff1f2;
+}
+
+.cancelled-banner {
+  padding: 16px;
+  margin-top: 10px;
+  background: linear-gradient(135deg, #fee2e2, #fecaca);
+  color: #b91c1c;
+  font-weight: 600;
+  border-radius: 10px;
+  text-align: center;
+}

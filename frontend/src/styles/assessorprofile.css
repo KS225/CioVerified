@@ -1,0 +1,94 @@
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+/* body {
+  background: #f3f4f6;
+  font-family: "Inter", sans-serif;
+  display: flex;
+  justify-content: center;
+  padding: 40px 20px;
+} */
+
+.profile-container {
+  width: 100%;
+  max-width: 750px;
+  background: #ffffff;
+  padding: 40px;
+  border-radius: 16px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.08);
+}
+
+.profile-container h1 {
+  text-align: center;
+  font-size: small;
+  margin-bottom: 30px;
+}
+
+.profile-form {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+input,
+textarea {
+  width: 100%;
+  padding: 14px;
+  border-radius: 10px;
+  border: 1px solid #d1d5db;
+  background: #ffffff;
+  color: #111827;
+}
+
+input:focus,
+textarea:focus {
+  border-color: #f97316;
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.15);
+}
+
+.input-error {
+  border-color: #dc2626;
+  background: #fff5f5;
+}
+
+.error {
+  color: #dc2626;
+  font-size: 12px;
+}
+
+.label {
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.radio-group {
+  display: flex;
+  gap: 20px;
+}
+
+textarea {
+  min-height: 100px;
+}
+
+input[type="file"] {
+  border: 1px dashed #d1d5db;
+  padding: 10px;
+}
+
+button {
+  padding: 14px;
+  border-radius: 10px;
+  border: none;
+  background: #f97316;
+  color: white;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+button:hover {
+  background: #ea580c;
+}
