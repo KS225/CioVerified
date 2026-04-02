@@ -1,26 +1,37 @@
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
-import { initDatabase } from "./config/initDB.js";
+import { initDatabase } from "./config/initDb.js";
 import authRoutes from "./routes/authRoutes.js";
+import { verifyMailer } from "./utils/mailer.js";
 
-dotenv.config();
+dotenv.config({ path: "../.env" });
 
 const app = express();
 
-// ✅ FIX CORS ISSUE
-app.use(cors({
-  origin: "http://localhost:5173"
-}));
+app.use(
+  cors({
+    origin: [
+      "http://localhost:5173",
+      "https://cio-verified.vercel.app",
+    ],
+    credentials: true,
+  })
+);
 
 app.use(express.json());
 
-// ✅ RUN DB INIT
 await initDatabase();
+await verifyMailer();
 
-// ✅ ROUTES
+app.get("/", (req, res) => {
+  res.send("Backend is running");
+});
+
 app.use("/api/auth", authRoutes);
 
-app.listen(5000, () => {
-  console.log("🚀 Server running on port 5000");
+const PORT = process.env.PORT || 5000;
+
+app.listen(PORT, "0.0.0.0", () => {
+  console.log(`🚀 Server running on port ${PORT}`);
 });
