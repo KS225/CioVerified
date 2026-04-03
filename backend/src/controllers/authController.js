@@ -23,13 +23,17 @@ export const loginUser = async (req, res) => {
     const { email, identifier, password } = req.body || {};
     const loginValue = (email || identifier || "").trim().toLowerCase();
 
-    console.log("LOGIN ATTEMPT:", { email, identifier, loginValue });
+    console.log("LOGIN ATTEMPT:", {
+      email,
+      identifier,
+      loginValue,
+    });
 
-    if (!loginValue || !password) {
-      return res.status(400).json({
-        message: "Email/username and password are required",
-      });
-    }
+    const [dbName] = await db.query("SELECT DATABASE() AS db");
+    console.log("LOGIN DB:", dbName[0].db);
+
+    const [allEmails] = await db.query("SELECT id, email, username FROM users");
+    console.log("ALL USERS IN DB:", allEmails);
 
     const [users] = await db.query(
       `
@@ -46,7 +50,7 @@ export const loginUser = async (req, res) => {
       FROM users u
       LEFT JOIN user_organizations uo ON u.id = uo.user_id
       LEFT JOIN organizations o ON uo.organization_id = o.id
-      WHERE u.email = ? OR u.username = ?
+      WHERE LOWER(TRIM(u.email)) = ? OR LOWER(TRIM(u.username)) = ?
       LIMIT 1
       `,
       [loginValue, loginValue]
@@ -59,13 +63,6 @@ export const loginUser = async (req, res) => {
     }
 
     const user = users[0];
-    console.log("DB USER:", {
-      id: user.id,
-      email: user.email,
-      is_verified: user.is_verified,
-      is_active: user.is_active,
-      hashPrefix: user.password_hash?.slice(0, 10),
-    });
 
     const isMatch = await bcrypt.compare(password, user.password_hash);
     console.log("PASSWORD MATCH:", isMatch);
