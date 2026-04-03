@@ -1,5 +1,6 @@
 import db from "../config/db.js";
 import bcrypt from "bcrypt";
+import jwt from "jsonwebtoken";
 import { sendOTP } from "../utils/mailer.js";
 
 const SOURCE_MAP = {
@@ -11,9 +12,94 @@ const SOURCE_MAP = {
   other: "OTHER",
 };
 
+
 const generateOTP = () =>
   Math.floor(100000 + Math.random() * 900000).toString();
 
+
+/* =========================
+   LOGIN USER
+========================= */
+export const loginUser = async (req, res) => {
+  try {
+    const { email, identifier, password } = req.body;
+
+    const loginValue = (email || identifier || "").trim().toLowerCase();
+
+    if (!loginValue || !password) {
+      return res.status(400).json({
+        message: "Email/username and password are required",
+      });
+    }
+
+    const [users] = await db.query(
+      `
+      SELECT 
+        u.id,
+        u.username,
+        u.email,
+        u.password_hash,
+        u.is_verified,
+        uo.organization_id,
+        o.name AS organization_name,
+        o.type AS organization_type
+      FROM users u
+      LEFT JOIN user_organizations uo ON u.id = uo.user_id AND uo.is_primary = TRUE
+      LEFT JOIN organizations o ON uo.organization_id = o.id
+      WHERE u.email = ? OR u.username = ?
+      LIMIT 1
+      `,
+      [loginValue, loginValue]
+    );
+
+    if (users.length === 0) {
+      return res.status(401).json({ message: "Invalid credentials" });
+    }
+
+    const user = users[0];
+
+    const isMatch = await bcrypt.compare(password, user.password_hash);
+    if (!isMatch) {
+      return res.status(401).json({ message: "Invalid credentials" });
+    }
+
+    if (!user.is_verified) {
+      return res.status(403).json({
+        message: "Please verify your email before logging in",
+      });
+    }
+
+    const token = jwt.sign(
+      {
+        id: user.id,
+        email: user.email,
+      },
+      process.env.JWT_SECRET,
+      { expiresIn: "7d" }
+    );
+
+    return res.status(200).json({
+      message: "Login successful",
+      token,
+      user: {
+        id: user.id,
+        username: user.username,
+        email: user.email,
+
+        // ✅ TEMPORARY (as you decided)
+        role: "APPLICANT",
+
+        organizationId: user.organization_id,
+        organizationName: user.organization_name,
+        organizationType: user.organization_type,
+      },
+    });
+
+  } catch (error) {
+    console.error("Login error:", error);
+    return res.status(500).json({ message: "Login failed" });
+  }
+};
 /* =========================
    REGISTER USER
    save only user + otp
