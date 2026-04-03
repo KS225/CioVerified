@@ -21,8 +21,9 @@ const generateOTP = () =>
 export const loginUser = async (req, res) => {
   try {
     const { email, identifier, password } = req.body || {};
-
     const loginValue = (email || identifier || "").trim().toLowerCase();
+
+    console.log("LOGIN ATTEMPT:", { email, identifier, loginValue });
 
     if (!loginValue || !password) {
       return res.status(400).json({
@@ -51,13 +52,24 @@ export const loginUser = async (req, res) => {
       [loginValue, loginValue]
     );
 
+    console.log("USERS FOUND:", users.length);
+
     if (users.length === 0) {
       return res.status(401).json({ message: "Invalid credentials" });
     }
 
     const user = users[0];
+    console.log("DB USER:", {
+      id: user.id,
+      email: user.email,
+      is_verified: user.is_verified,
+      is_active: user.is_active,
+      hashPrefix: user.password_hash?.slice(0, 10),
+    });
 
     const isMatch = await bcrypt.compare(password, user.password_hash);
+    console.log("PASSWORD MATCH:", isMatch);
+
     if (!isMatch) {
       return res.status(401).json({ message: "Invalid credentials" });
     }
@@ -90,14 +102,14 @@ export const loginUser = async (req, res) => {
         id: user.id,
         username: user.username,
         email: user.email,
-        role: "APPLICANT", // temporary frontend label
+        role: "APPLICANT",
         organizationId: user.organization_id || null,
         organizationName: user.organization_name || null,
         organizationType: user.organization_type || null,
       },
     });
   } catch (error) {
-    console.error("Login error:", error);
+    console.error("LOGIN ERROR:", error);
     return res.status(500).json({
       message: "Login failed",
       error: error.message,
