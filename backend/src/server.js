@@ -5,7 +5,7 @@ import { initDatabase } from "./config/initDb.js";
 import authRoutes from "./routes/authRoutes.js";
 import { verifyMailer } from "./utils/mailer.js";
 
-dotenv.config({ path: "../.env" });
+dotenv.config();
 
 const app = express();
 
