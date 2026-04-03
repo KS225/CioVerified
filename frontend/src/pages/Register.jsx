@@ -1,14 +1,12 @@
-import { useEffect, useRef, useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import API from "../services/api";
 import "../styles/auth.css";
 
 function Register() {
   const navigate = useNavigate();
   const turnstileRef = useRef(null);
   const widgetIdRef = useRef(null);
-
-  const API_BASE_URL =
-    import.meta.env.VITE_API_URL || "http://localhost:5000";
 
   const [showPassword, setShowPassword] = useState(false);
   const [passwordStrength, setPasswordStrength] = useState("");
@@ -190,21 +188,7 @@ function Register() {
         turnstileToken,
       };
 
-      const res = await fetch(`${API_BASE_URL}/api/auth/register`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(payload),
-      });
-
-      const data = await res.json();
-
-      if (!res.ok) {
-        alert(data.message || "Registration failed");
-        resetTurnstile();
-        return;
-      }
+      await API.post("/auth/register", payload);
 
       alert("OTP sent to your registered email");
 
@@ -215,7 +199,11 @@ function Register() {
       });
     } catch (error) {
       console.error("Registration error:", error);
-      alert("Server error. Please try again later.");
+      alert(
+        error.response?.data?.message ||
+          error.response?.data?.error ||
+          "Server error. Please try again later."
+      );
       resetTurnstile();
     } finally {
       setSubmitting(false);

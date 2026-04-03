@@ -13,7 +13,7 @@ function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
 
-  const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:5000";
+  const apiBase = import.meta.env.VITE_API_BASE_URL?.replace(/\/api$/, "") || "";
 
   useEffect(() => {
     const syncUser = () => {
@@ -64,7 +64,7 @@ function Navbar() {
   const resolveImageUrl = (imagePath) => {
     if (!imagePath) return "";
     if (imagePath.startsWith("http")) return imagePath;
-    return `${API_BASE}${imagePath}`;
+    return `${apiBase}${imagePath}`;
   };
 
   return (

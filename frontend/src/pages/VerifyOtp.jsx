@@ -1,13 +1,11 @@
 import { useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
+import API from "../services/api";
 import "../styles/auth.css";
 
 function VerifyOtp() {
   const location = useLocation();
   const navigate = useNavigate();
-
-  const API_BASE_URL =
-    import.meta.env.VITE_API_URL || "http://localhost:5000";
 
   const passedEmail = location.state?.email || "";
 
@@ -123,29 +121,17 @@ function VerifyOtp() {
           formData.source === "other" ? formData.otherSource.trim() : "",
       };
 
-      const res = await fetch(
-        `${API_BASE_URL}/api/auth/verify-registration-otp`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(payload),
-        }
-      );
-
-      const data = await res.json();
-
-      if (!res.ok) {
-        alert(data.message || "OTP verification failed");
-        return;
-      }
+      await API.post("/auth/verify-registration-otp", payload);
 
       alert("Registration completed successfully");
       navigate("/login");
     } catch (error) {
       console.error("OTP verify error:", error);
-      alert("Server error. Please try again later.");
+      alert(
+        error.response?.data?.message ||
+          error.response?.data?.error ||
+          "Server error. Please try again later."
+      );
     } finally {
       setSubmitting(false);
     }
@@ -160,30 +146,18 @@ function VerifyOtp() {
     try {
       setResending(true);
 
-      const res = await fetch(
-        `${API_BASE_URL}/api/auth/resend-registration-otp`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            email: formData.email.trim().toLowerCase(),
-          }),
-        }
-      );
-
-      const data = await res.json();
-
-      if (!res.ok) {
-        alert(data.message || "Failed to resend OTP");
-        return;
-      }
+      await API.post("/auth/resend-registration-otp", {
+        email: formData.email.trim().toLowerCase(),
+      });
 
       alert("OTP resent successfully");
     } catch (error) {
       console.error("Resend OTP error:", error);
-      alert("Server error while resending OTP");
+      alert(
+        error.response?.data?.message ||
+          error.response?.data?.error ||
+          "Server error while resending OTP"
+      );
     } finally {
       setResending(false);
     }
@@ -253,19 +227,19 @@ function VerifyOtp() {
             onChange={handleTextOnly}
           />
 
-         <label htmlFor="phone">Phone Number</label>
-<div className="phone-input-group">
-  <span className="country-code">+91</span>
-  <input
-    id="phone"
-    name="phone"
-    placeholder="Enter 10-digit number"
-    value={formData.phone}
-    onChange={handleNumberOnly}
-    autoComplete="tel"
-    maxLength={10}
-  />
-</div>
+          <label htmlFor="phone">Phone Number</label>
+          <div className="phone-input-group">
+            <span className="country-code">+91</span>
+            <input
+              id="phone"
+              name="phone"
+              placeholder="Enter 10-digit number"
+              value={formData.phone}
+              onChange={handleNumberOnly}
+              autoComplete="tel"
+              maxLength={10}
+            />
+          </div>
 
           <label htmlFor="source">Reference Source</label>
           <select

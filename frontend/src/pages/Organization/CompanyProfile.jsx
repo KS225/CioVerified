@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
+import API from "../../services/api";
 import "../../styles/companyprofile.css";
-
-const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:5000";
 
 function CompanyProfile() {
   const [company, setCompany] = useState(null);
@@ -26,24 +25,14 @@ function CompanyProfile() {
   useEffect(() => {
     const fetchCompanyProfile = async () => {
       try {
-        const res = await fetch(`${API_BASE}/api/profile`, {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-          },
-        });
-
-        const data = await res.json();
-
-        if (!res.ok) {
-          alert(data.message || "Failed to fetch profile");
-          return;
-        }
+        const res = await API.get("/profile");
+        const data = res.data;
 
         setCompany(data);
         setPreviewImage(data.profilePicture || "");
       } catch (err) {
-        console.error(err);
-        alert("Server error while fetching profile");
+        console.error("Profile fetch error:", err);
+        alert(err.response?.data?.message || "Server error while fetching profile");
       } finally {
         setLoading(false);
       }
@@ -78,7 +67,9 @@ function CompanyProfile() {
     if (!imagePath) return "https://via.placeholder.com/120?text=Profile";
     if (imagePath.startsWith("blob:")) return imagePath;
     if (imagePath.startsWith("http")) return imagePath;
-    return `${API_BASE}${imagePath}`;
+
+    const apiBase = import.meta.env.VITE_API_BASE_URL?.replace(/\/api$/, "") || "";
+    return `${apiBase}${imagePath}`;
   };
 
   const handleUpdatePhoto = async () => {
@@ -91,20 +82,13 @@ function CompanyProfile() {
       const submitData = new FormData();
       submitData.append("profilePicture", selectedImage);
 
-      const res = await fetch(`${API_BASE}/api/profile/company`, {
-        method: "PUT",
+      const res = await API.put("/profile/company", submitData, {
         headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
+          "Content-Type": "multipart/form-data",
         },
-        body: submitData,
       });
 
-      const data = await res.json();
-
-      if (!res.ok) {
-        alert(data.message || "Profile photo update failed");
-        return;
-      }
+      const data = res.data;
 
       const updatedProfilePicture =
         data.user?.profilePicture || data.profilePicture || "";
@@ -133,8 +117,8 @@ function CompanyProfile() {
 
       alert("Profile photo updated successfully");
     } catch (err) {
-      console.error(err);
-      alert("Server error while updating profile photo");
+      console.error("Profile photo update error:", err);
+      alert(err.response?.data?.message || "Server error while updating profile photo");
     }
   };
 
@@ -157,24 +141,10 @@ function CompanyProfile() {
     }
 
     try {
-      const res = await fetch(`${API_BASE}/api/profile/change-password`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-        },
-        body: JSON.stringify({
-          newPassword,
-          confirmPassword,
-        }),
+      await API.put("/profile/change-password", {
+        newPassword,
+        confirmPassword,
       });
-
-      const data = await res.json();
-
-      if (!res.ok) {
-        alert(data.message || "Password change failed");
-        return;
-      }
 
       alert("Password changed successfully");
       setPasswordData({
@@ -187,8 +157,8 @@ function CompanyProfile() {
       });
       setPasswordMode(false);
     } catch (err) {
-      console.error(err);
-      alert("Server error while changing password");
+      console.error("Password change error:", err);
+      alert(err.response?.data?.message || "Server error while changing password");
     }
   };
 
