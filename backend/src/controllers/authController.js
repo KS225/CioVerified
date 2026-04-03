@@ -12,17 +12,15 @@ const SOURCE_MAP = {
   other: "OTHER",
 };
 
-
 const generateOTP = () =>
   Math.floor(100000 + Math.random() * 900000).toString();
-
 
 /* =========================
    LOGIN USER
 ========================= */
 export const loginUser = async (req, res) => {
   try {
-    const { email, identifier, password } = req.body;
+    const { email, identifier, password } = req.body || {};
 
     const loginValue = (email || identifier || "").trim().toLowerCase();
 
@@ -40,11 +38,12 @@ export const loginUser = async (req, res) => {
         u.email,
         u.password_hash,
         u.is_verified,
+        u.is_active,
         uo.organization_id,
         o.name AS organization_name,
         o.type AS organization_type
       FROM users u
-      LEFT JOIN user_organizations uo ON u.id = uo.user_id AND uo.is_primary = TRUE
+      LEFT JOIN user_organizations uo ON u.id = uo.user_id
       LEFT JOIN organizations o ON uo.organization_id = o.id
       WHERE u.email = ? OR u.username = ?
       LIMIT 1
@@ -69,6 +68,12 @@ export const loginUser = async (req, res) => {
       });
     }
 
+    if (user.is_active === 0) {
+      return res.status(403).json({
+        message: "Your account is inactive. Please contact support.",
+      });
+    }
+
     const token = jwt.sign(
       {
         id: user.id,
@@ -85,31 +90,28 @@ export const loginUser = async (req, res) => {
         id: user.id,
         username: user.username,
         email: user.email,
-
-        // ✅ TEMPORARY (as you decided)
-        role: "APPLICANT",
-
-        organizationId: user.organization_id,
-        organizationName: user.organization_name,
-        organizationType: user.organization_type,
+        role: "APPLICANT", // temporary frontend label
+        organizationId: user.organization_id || null,
+        organizationName: user.organization_name || null,
+        organizationType: user.organization_type || null,
       },
     });
-
   } catch (error) {
-  console.error("Login error:", error);
-  return res.status(500).json({
-    message: "Login failed",
-    error: error.message,
-  });
-}
+    console.error("Login error:", error);
+    return res.status(500).json({
+      message: "Login failed",
+      error: error.message,
+    });
+  }
 };
+
 /* =========================
    REGISTER USER
    save only user + otp
 ========================= */
 export const registerUser = async (req, res) => {
   try {
-    const { username, email, password } = req.body;
+    const { username, email, password } = req.body || {};
 
     if (!username || !email || !password) {
       return res.status(400).json({
@@ -202,7 +204,7 @@ export const verifyRegistrationOTP = async (req, res) => {
       source,
       referralName,
       otherSource,
-    } = req.body;
+    } = req.body || {};
 
     if (!email || !otp || !organizationName || !contactPerson || !source) {
       return res.status(400).json({
@@ -272,8 +274,8 @@ export const verifyRegistrationOTP = async (req, res) => {
     const orgId = orgResult.insertId;
 
     await conn.query(
-      `INSERT INTO user_organizations (user_id, organization_id, is_primary)
-       VALUES (?, ?, TRUE)`,
+      `INSERT INTO user_organizations (user_id, organization_id)
+       VALUES (?, ?)`,
       [user.id, orgId]
     );
 
@@ -287,7 +289,10 @@ export const verifyRegistrationOTP = async (req, res) => {
   } catch (error) {
     await conn.rollback();
     console.error("Verify OTP error:", error);
-    return res.status(500).json({ message: "Server error" });
+    return res.status(500).json({
+      message: "Server error",
+      error: error.message,
+    });
   } finally {
     conn.release();
   }
@@ -298,7 +303,7 @@ export const verifyRegistrationOTP = async (req, res) => {
 ========================= */
 export const resendRegistrationOTP = async (req, res) => {
   try {
-    const { email } = req.body;
+    const { email } = req.body || {};
 
     if (!email) {
       return res.status(400).json({ message: "Email is required" });
@@ -334,6 +339,9 @@ export const resendRegistrationOTP = async (req, res) => {
     return res.status(200).json({ message: "OTP resent successfully" });
   } catch (error) {
     console.error("Resend OTP error:", error);
-    return res.status(500).json({ message: "Failed to resend OTP" });
+    return res.status(500).json({
+      message: "Failed to resend OTP",
+      error: error.message,
+    });
   }
 };
