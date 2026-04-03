@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import "../../styles/companyprofile.css";
 
+const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:5000";
+
 function CompanyProfile() {
   const [company, setCompany] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -8,21 +10,14 @@ function CompanyProfile() {
   const [editMode, setEditMode] = useState(false);
   const [passwordMode, setPasswordMode] = useState(false);
 
-  const [formData, setFormData] = useState({
-    companyName: "",
-    registrationNumber: "",
-    industry: "",
-    contactPerson: "",
-    designation: "",
-    email: "",
-    phone: "",
-    profilePicture: ""
+  const [passwordData, setPasswordData] = useState({
+    newPassword: "",
+    confirmPassword: "",
   });
 
-  const [passwordData, setPasswordData] = useState({
-    currentPassword: "",
-    newPassword: "",
-    confirmPassword: ""
+  const [showPassword, setShowPassword] = useState({
+    newPassword: false,
+    confirmPassword: false,
   });
 
   const [selectedImage, setSelectedImage] = useState(null);
@@ -31,10 +26,10 @@ function CompanyProfile() {
   useEffect(() => {
     const fetchCompanyProfile = async () => {
       try {
-        const res = await fetch("http://localhost:5000/api/profile", {
+        const res = await fetch(`${API_BASE}/api/profile`, {
           headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`
-          }
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
         });
 
         const data = await res.json();
@@ -45,16 +40,6 @@ function CompanyProfile() {
         }
 
         setCompany(data);
-        setFormData({
-          companyName: data.companyName || "",
-          registrationNumber: data.registrationNumber || "",
-          industry: data.industry || "",
-          contactPerson: data.contactPerson || "",
-          designation: data.designation || "",
-          email: data.email || "",
-          phone: data.phone || "",
-          profilePicture: data.profilePicture || ""
-        });
         setPreviewImage(data.profilePicture || "");
       } catch (err) {
         console.error(err);
@@ -67,12 +52,18 @@ function CompanyProfile() {
     fetchCompanyProfile();
   }, []);
 
-  const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+  const handlePasswordChange = (e) => {
+    setPasswordData((prev) => ({
+      ...prev,
+      [e.target.name]: e.target.value,
+    }));
   };
 
-  const handlePasswordChange = (e) => {
-    setPasswordData({ ...passwordData, [e.target.name]: e.target.value });
+  const togglePasswordVisibility = (field) => {
+    setShowPassword((prev) => ({
+      ...prev,
+      [field]: !prev[field],
+    }));
   };
 
   const handleImageChange = (e) => {
@@ -83,59 +74,75 @@ function CompanyProfile() {
     setPreviewImage(URL.createObjectURL(file));
   };
 
-  const handleUpdate = async () => {
+  const resolveImageUrl = (imagePath) => {
+    if (!imagePath) return "https://via.placeholder.com/120?text=Profile";
+    if (imagePath.startsWith("blob:")) return imagePath;
+    if (imagePath.startsWith("http")) return imagePath;
+    return `${API_BASE}${imagePath}`;
+  };
+
+  const handleUpdatePhoto = async () => {
     try {
-      const submitData = new FormData();
-
-      submitData.append("companyName", formData.companyName);
-      submitData.append("registrationNumber", formData.registrationNumber);
-      submitData.append("industry", formData.industry);
-      submitData.append("contactPerson", formData.contactPerson);
-      submitData.append("designation", formData.designation);
-      submitData.append("email", formData.email);
-      submitData.append("phone", formData.phone);
-
-      if (selectedImage) {
-        submitData.append("profilePicture", selectedImage);
+      if (!selectedImage) {
+        alert("Please select a profile picture");
+        return;
       }
 
-      const res = await fetch("http://localhost:5000/api/profile/company", {
+      const submitData = new FormData();
+      submitData.append("profilePicture", selectedImage);
+
+      const res = await fetch(`${API_BASE}/api/profile/company`, {
         method: "PUT",
         headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
         },
-        body: submitData
+        body: submitData,
       });
 
       const data = await res.json();
 
       if (!res.ok) {
-        alert(data.message || "Update failed");
+        alert(data.message || "Profile photo update failed");
         return;
       }
 
-      alert("Updated successfully");
+      const updatedProfilePicture =
+        data.user?.profilePicture || data.profilePicture || "";
 
       const updatedCompany = {
-        ...formData,
-        profilePicture: data.profilePicture || previewImage
+        ...company,
+        profilePicture: updatedProfilePicture,
       };
 
       setCompany(updatedCompany);
-      setFormData(updatedCompany);
-      setEditMode(false);
+      setPreviewImage(updatedProfilePicture);
       setSelectedImage(null);
+      setEditMode(false);
+
+      const storedUser = JSON.parse(localStorage.getItem("user") || "null");
+
+      if (storedUser) {
+        const updatedUser = {
+          ...storedUser,
+          ...(data.user || {}),
+        };
+
+        localStorage.setItem("user", JSON.stringify(updatedUser));
+        window.dispatchEvent(new Event("storage"));
+      }
+
+      alert("Profile photo updated successfully");
     } catch (err) {
       console.error(err);
-      alert("Server error while updating profile");
+      alert("Server error while updating profile photo");
     }
   };
 
   const handleChangePassword = async () => {
-    const { currentPassword, newPassword, confirmPassword } = passwordData;
+    const { newPassword, confirmPassword } = passwordData;
 
-    if (!currentPassword || !newPassword || !confirmPassword) {
-      alert("Please fill all password fields");
+    if (!newPassword || !confirmPassword) {
+      alert("Please fill both password fields");
       return;
     }
 
@@ -144,14 +151,22 @@ function CompanyProfile() {
       return;
     }
 
+    if (newPassword.length < 6) {
+      alert("Password must be at least 6 characters long");
+      return;
+    }
+
     try {
-      const res = await fetch("http://localhost:5000/api/profile/change-password", {
+      const res = await fetch(`${API_BASE}/api/profile/change-password`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${localStorage.getItem("token")}`
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
         },
-        body: JSON.stringify(passwordData)
+        body: JSON.stringify({
+          newPassword,
+          confirmPassword,
+        }),
       });
 
       const data = await res.json();
@@ -163,9 +178,12 @@ function CompanyProfile() {
 
       alert("Password changed successfully");
       setPasswordData({
-        currentPassword: "",
         newPassword: "",
-        confirmPassword: ""
+        confirmPassword: "",
+      });
+      setShowPassword({
+        newPassword: false,
+        confirmPassword: false,
       });
       setPasswordMode(false);
     } catch (err) {
@@ -184,16 +202,10 @@ function CompanyProfile() {
       <div className="profile-card">
         <div className="profile-image-section">
           <img
-  src={
-    previewImage
-      ? previewImage.startsWith("blob:")
-        ? previewImage
-        : `http://localhost:5000${previewImage}`
-      : "https://via.placeholder.com/120?text=Profile"
-  }
-  alt="Profile"
-  className="profile-image"
-/>
+            src={resolveImageUrl(previewImage)}
+            alt="Profile"
+            className="profile-image"
+          />
 
           {editMode && (
             <input
@@ -204,144 +216,99 @@ function CompanyProfile() {
           )}
         </div>
 
+        <div className="profile-row">
+          <span>Company Name</span>
+          <p>{company.companyName}</p>
+        </div>
+
+        <div className="profile-row">
+          <span>Contact Person</span>
+          <p>{company.contactPerson || company.username || "N/A"}</p>
+        </div>
+
+        <div className="profile-row">
+          <span>Designation</span>
+          <p>{company.designation || "N/A"}</p>
+        </div>
+
+        <div className="profile-row">
+          <span>Email</span>
+          <p>{company.email}</p>
+        </div>
+
+        <div className="profile-row">
+          <span>Phone</span>
+          <p>{company.phone ? `+91 ${company.phone}` : "N/A"}</p>
+        </div>
+
         {!editMode ? (
-          <>
-            <div className="profile-row">
-              <span>Company Name</span>
-              <p>{company.companyName}</p>
-            </div>
+          <div className="btn-group">
+            <button className="profile-btn" onClick={() => setEditMode(true)}>
+              Edit Profile Photo
+            </button>
 
-            <div className="profile-row">
-              <span>CIN</span>
-              <p>{company.registrationNumber}</p>
-            </div>
-
-            <div className="profile-row">
-              <span>Industry</span>
-              <p>{company.industry || "N/A"}</p>
-            </div>
-
-            <div className="profile-row">
-              <span>Contact Person</span>
-              <p>{company.contactPerson}</p>
-            </div>
-
-            <div className="profile-row">
-              <span>Designation</span>
-              <p>{company.designation || "N/A"}</p>
-            </div>
-
-            <div className="profile-row">
-              <span>Email</span>
-              <p>{company.email}</p>
-            </div>
-
-            <div className="profile-row">
-              <span>Phone</span>
-              <p>{company.phone || "N/A"}</p>
-            </div>
-
-            <div className="btn-group">
-              <button className="profile-btn" onClick={() => setEditMode(true)}>
-                Edit Details
-              </button>
-
-              <button className="profile-btn" onClick={() => setPasswordMode(!passwordMode)}>
-                {passwordMode ? "Close Password Section" : "Change Password"}
-              </button>
-            </div>
-          </>
+            <button
+              className="profile-btn"
+              onClick={() => setPasswordMode(!passwordMode)}
+            >
+              {passwordMode ? "Close Password Section" : "Change Password"}
+            </button>
+          </div>
         ) : (
-          <>
-            <input
-              name="companyName"
-              value={formData.companyName}
-              onChange={handleChange}
-              placeholder="Company Name"
-            />
-            <input
-              name="registrationNumber"
-              value={formData.registrationNumber}
-              onChange={handleChange}
-              placeholder="CIN"
-            />
-            <input
-              name="industry"
-              value={formData.industry}
-              onChange={handleChange}
-              placeholder="Industry"
-            />
-            <input
-              name="contactPerson"
-              value={formData.contactPerson}
-              onChange={handleChange}
-              placeholder="Contact Person"
-            />
-            <input
-              name="designation"
-              value={formData.designation}
-              onChange={handleChange}
-              placeholder="Designation"
-            />
-            <input
-              name="email"
-              value={formData.email}
-              onChange={handleChange}
-              placeholder="Email"
-            />
-            <input
-              name="phone"
-              value={formData.phone}
-              onChange={handleChange}
-              placeholder="Phone"
-            />
-
-            <div className="btn-group">
-              <button className="profile-btn" onClick={handleUpdate}>
-                Save
-              </button>
-              <button
-                className="cancel-btn"
-                onClick={() => {
-                  setEditMode(false);
-                  setFormData(company);
-                  setPreviewImage(company.profilePicture || "");
-                  setSelectedImage(null);
-                }}
-              >
-                Cancel
-              </button>
-            </div>
-          </>
+          <div className="btn-group">
+            <button className="profile-btn" onClick={handleUpdatePhoto}>
+              Save Photo
+            </button>
+            <button
+              className="cancel-btn"
+              onClick={() => {
+                setEditMode(false);
+                setSelectedImage(null);
+                setPreviewImage(company.profilePicture || "");
+              }}
+            >
+              Cancel
+            </button>
+          </div>
         )}
 
         {passwordMode && (
           <div className="password-section">
             <h3>Change Password</h3>
 
-            <input
-              type="password"
-              name="currentPassword"
-              placeholder="Current Password"
-              value={passwordData.currentPassword}
-              onChange={handlePasswordChange}
-            />
+            <div className="password-input-group">
+              <input
+                type={showPassword.newPassword ? "text" : "password"}
+                name="newPassword"
+                placeholder="New Password"
+                value={passwordData.newPassword}
+                onChange={handlePasswordChange}
+              />
+              <button
+                type="button"
+                className="show-password-btn"
+                onClick={() => togglePasswordVisibility("newPassword")}
+              >
+                {showPassword.newPassword ? "Hide" : "Show"}
+              </button>
+            </div>
 
-            <input
-              type="password"
-              name="newPassword"
-              placeholder="New Password"
-              value={passwordData.newPassword}
-              onChange={handlePasswordChange}
-            />
-
-            <input
-              type="password"
-              name="confirmPassword"
-              placeholder="Confirm New Password"
-              value={passwordData.confirmPassword}
-              onChange={handlePasswordChange}
-            />
+            <div className="password-input-group">
+              <input
+                type={showPassword.confirmPassword ? "text" : "password"}
+                name="confirmPassword"
+                placeholder="Confirm New Password"
+                value={passwordData.confirmPassword}
+                onChange={handlePasswordChange}
+              />
+              <button
+                type="button"
+                className="show-password-btn"
+                onClick={() => togglePasswordVisibility("confirmPassword")}
+              >
+                {showPassword.confirmPassword ? "Hide" : "Show"}
+              </button>
+            </div>
 
             <div className="btn-group">
               <button className="profile-btn" onClick={handleChangePassword}>
@@ -352,9 +319,12 @@ function CompanyProfile() {
                 onClick={() => {
                   setPasswordMode(false);
                   setPasswordData({
-                    currentPassword: "",
                     newPassword: "",
-                    confirmPassword: ""
+                    confirmPassword: "",
+                  });
+                  setShowPassword({
+                    newPassword: false,
+                    confirmPassword: false,
                   });
                 }}
               >

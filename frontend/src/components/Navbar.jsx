@@ -13,12 +13,22 @@ function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
 
-  useEffect(() => {
-    const token = localStorage.getItem("token");
-    const storedUser = JSON.parse(localStorage.getItem("user"));
+  const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:5000";
+  const hideNavbar = ["/login", "/register", "/signup"].includes(location.pathname);
 
-    setIsLoggedIn(!!token);
-    setUser(storedUser);
+  useEffect(() => {
+    const syncUser = () => {
+      const token = localStorage.getItem("token");
+      const storedUser = JSON.parse(localStorage.getItem("user") || "null");
+
+      setIsLoggedIn(!!token);
+      setUser(storedUser);
+    };
+
+    syncUser();
+
+    window.addEventListener("storage", syncUser);
+    return () => window.removeEventListener("storage", syncUser);
   }, [location]);
 
   useEffect(() => {
@@ -40,6 +50,7 @@ function Navbar() {
   const handleLogout = () => {
     localStorage.clear();
     setIsLoggedIn(false);
+    setUser(null);
     setMobileMenuOpen(false);
     setProfileMenuOpen(false);
     navigate("/login");
@@ -47,8 +58,17 @@ function Navbar() {
 
   const handleProfileClick = () => {
     setProfileMenuOpen(false);
+    setMobileMenuOpen(false);
     navigate("/profile");
   };
+
+  const resolveImageUrl = (imagePath) => {
+    if (!imagePath) return "";
+    if (imagePath.startsWith("http")) return imagePath;
+    return `${API_BASE}${imagePath}`;
+  };
+
+  if (hideNavbar) return null;
 
   return (
     <header className="granuler-navbar">
@@ -90,7 +110,15 @@ function Navbar() {
                 title="Open profile menu"
                 type="button"
               >
-                {user?.username?.charAt(0)?.toUpperCase() || "U"}
+                {user?.profilePicture ? (
+                  <img
+                    src={resolveImageUrl(user.profilePicture)}
+                    alt="Profile"
+                    className="avatar-image"
+                  />
+                ) : (
+                  <span>{user?.username?.charAt(0)?.toUpperCase() || "U"}</span>
+                )}
               </button>
 
               {profileMenuOpen && (

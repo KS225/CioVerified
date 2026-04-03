@@ -513,3 +513,30 @@ body {
     margin-top: 14px;
   }
 }
+.phone-input-group {
+  display: flex;
+  align-items: center;
+  border: 1px solid #d0d5dd;
+  border-radius: 8px;
+  overflow: hidden;
+  background: #fff;
+  margin-bottom: 14px;
+}
+
+.country-code {
+  background:transparent;
+  padding: 12px 14px;
+  font-weight: 600;
+  color: #000000;
+  border-right: 1px solid #d0d5dd;
+  white-space: nowrap;
+}
+
+.phone-input-group input {
+  flex: 1;
+  border: none;
+  outline: none;
+  padding: 12px 14px;
+  font-size: 14px;
+  background: transparent;
+}

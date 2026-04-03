@@ -79,6 +79,15 @@ return (
         />
 
         <Route
+  path="/profile"
+  element={
+    <ProtectedRoute roles={["APPLICANT"]}>
+      <CompanyProfile />
+    </ProtectedRoute>
+  }
+/>
+
+        <Route
           path="/dashboard/apply"
           element={
             <ProtectedRoute roles={["APPLICANT"]}>

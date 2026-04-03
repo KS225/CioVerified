@@ -1,25 +1,38 @@
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
+import path from "path";
 import { initDatabase } from "./config/initDb.js";
 import authRoutes from "./routes/authRoutes.js";
+import profileRoutes from "./routes/profileRoutes.js";
+import applicationRoutes from "./routes/applicationRoutes.js";
 import { verifyMailer } from "./utils/mailer.js";
 
-dotenv.config();
+dotenv.config({ path: "../.env" });
 
 const app = express();
 
+const allowedOrigins = [
+  "http://localhost:5173",
+  "https://cio-verified.vercel.app",
+];
+
 app.use(
   cors({
-    origin: [
-      "http://localhost:5173",
-      "https://cio-verified.vercel.app",
-    ],
+    origin: function (origin, callback) {
+      if (!origin || allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      }
+      return callback(new Error("Not allowed by CORS"));
+    },
     credentials: true,
   })
 );
 
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
+app.use("/uploads", express.static(path.resolve("uploads")));
 
 await initDatabase();
 await verifyMailer();
@@ -29,6 +42,8 @@ app.get("/", (req, res) => {
 });
 
 app.use("/api/auth", authRoutes);
+app.use("/api/profile", profileRoutes);
+app.use("/api/applications", applicationRoutes);
 
 const PORT = process.env.PORT || 5000;
 

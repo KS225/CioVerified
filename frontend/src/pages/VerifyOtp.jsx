@@ -253,16 +253,19 @@ function VerifyOtp() {
             onChange={handleTextOnly}
           />
 
-          <label htmlFor="phone">Phone Number</label>
-          <input
-            id="phone"
-            name="phone"
-            placeholder="Official contact number"
-            value={formData.phone}
-            onChange={handleNumberOnly}
-            autoComplete="tel"
-            maxLength={10}
-          />
+         <label htmlFor="phone">Phone Number</label>
+<div className="phone-input-group">
+  <span className="country-code">+91</span>
+  <input
+    id="phone"
+    name="phone"
+    placeholder="Enter 10-digit number"
+    value={formData.phone}
+    onChange={handleNumberOnly}
+    autoComplete="tel"
+    maxLength={10}
+  />
+</div>
 
           <label htmlFor="source">Reference Source</label>
           <select

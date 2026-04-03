@@ -15,18 +15,21 @@
   left: 0;
   height: 3px;
   width: 100%;
-  background: var(--granuler-gradient);
+  background: var(--granuler-gradient, linear-gradient(90deg, #ff7a00, #ffb347));
 }
 
 /* ================= CONTAINER ================= */
 .nav-container {
   width: 100%;
+  max-width: 1400px;
   min-height: 72px;
+  margin: 0 auto;
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 0 40px;
   gap: 20px;
+  box-sizing: border-box;
 }
 
 /* ================= LOGO ================= */
@@ -34,6 +37,7 @@
   display: flex;
   align-items: center;
   flex-shrink: 0;
+  min-width: 0;
 }
 
 .nav-logo a {
@@ -47,6 +51,7 @@
   width: auto;
   max-width: 220px;
   object-fit: contain;
+  display: block;
 }
 
 /* ================= DESKTOP NAV ================= */
@@ -54,6 +59,7 @@
   display: flex;
   align-items: center;
   gap: 28px;
+  flex-wrap: nowrap;
 }
 
 .nav-links a {
@@ -69,29 +75,12 @@
   color: #2f6fed;
 }
 
-/* ================= LOGOUT ================= */
-.nav-logout-btn,
-.mobile-logout-btn {
-  font-size: 14px;
-  background: #fa7300;
-  color: white;
-  border: none;
-  padding: 8px 18px;
-  border-radius: 6px;
-  cursor: pointer;
-  transition: 0.2s ease;
-}
-
-.nav-logout-btn:hover,
-.mobile-logout-btn:hover {
-  background-color: #dc2626;
-}
-
 /* ================= RIGHT SIDE ================= */
 .nav-right {
   display: flex;
   align-items: center;
   gap: 12px;
+  flex-shrink: 0;
 }
 
 /* ================= AVATAR ================= */
@@ -100,17 +89,20 @@
 }
 
 .avatar {
-  width: 40px;
-  height: 40px;
-  border: none;
-  border-radius: 50%;
+  width: 42px;
+  height: 42px;
   background: linear-gradient(135deg, #ff7a00, #ffb347);
-  color: #fff;
+  color: white;
+  border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-weight: 700;
+  font-weight: bold;
   cursor: pointer;
+  border: none;
+  overflow: hidden;
+  padding: 0;
+  font-size: 16px;
   box-shadow: 0 6px 14px rgba(250, 115, 0, 0.18);
   transition: all 0.2s ease;
   user-select: none;
@@ -121,12 +113,25 @@
   box-shadow: 0 10px 20px rgba(250, 115, 0, 0.22);
 }
 
+.avatar span {
+  line-height: 1;
+}
+
+.avatar-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+  display: block;
+}
+
 /* ================= DROPDOWN ================= */
 .profile-dropdown-menu {
   position: absolute;
   top: 52px;
   right: 0;
   width: 220px;
+  max-width: calc(100vw - 24px);
   background: #fff;
   border: 1px solid #eceff3;
   border-radius: 14px;
@@ -186,6 +191,7 @@
   background: transparent;
   cursor: pointer;
   position: relative;
+  flex-shrink: 0;
 }
 
 .mobile-menu-btn span {
@@ -236,6 +242,7 @@
   border: none;
   border-bottom: 1px solid #f1f3f6;
   cursor: pointer;
+  box-sizing: border-box;
 }
 
 .mobile-nav a:hover,
@@ -249,6 +256,7 @@
 
 .mobile-logout-btn {
   color: #dc2626;
+  background: #fff;
 }
 
 /* ================= RESPONSIVE ================= */
@@ -288,6 +296,7 @@
 
   .logo-image {
     height: 36px;
+    max-width: 170px;
   }
 }
 
@@ -295,10 +304,38 @@
   .nav-container {
     min-height: 64px;
     padding: 0 14px;
+    gap: 10px;
   }
 
   .logo-image {
     height: 32px;
+    max-width: 145px;
+  }
+
+  .mobile-nav a,
+  .mobile-nav button {
+    padding: 13px 16px;
+    font-size: 14px;
+  }
+}
+
+@media (max-width: 420px) {
+  .nav-container {
+    padding: 0 12px;
+  }
+
+  .logo-image {
+    height: 28px;
+    max-width: 125px;
+  }
+
+  .mobile-menu-btn {
+    width: 38px;
+    height: 38px;
+  }
+
+  .mobile-menu-btn span {
+    width: 20px;
   }
 }
 
