@@ -14,7 +14,6 @@ function Navbar() {
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
 
   const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:5000";
-  const hideNavbar = ["/login", "/register", "/signup"].includes(location.pathname);
 
   useEffect(() => {
     const syncUser = () => {
@@ -67,8 +66,6 @@ function Navbar() {
     if (imagePath.startsWith("http")) return imagePath;
     return `${API_BASE}${imagePath}`;
   };
-
-  if (hideNavbar) return null;
 
   return (
     <header className="granuler-navbar">
