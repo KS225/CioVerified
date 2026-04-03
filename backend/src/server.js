@@ -3,9 +3,11 @@ import cors from "cors";
 import dotenv from "dotenv";
 import path from "path";
 import { initDatabase } from "./config/initDb.js";
+import session from "express-session";
 import authRoutes from "./routes/authRoutes.js";
 import profileRoutes from "./routes/profileRoutes.js";
 import applicationRoutes from "./routes/applicationRoutes.js";
+import captchaRoutes from "./routes/captchaRoutes.js";
 import { verifyMailer } from "./utils/mailer.js";
 
 dotenv.config({ path: "../.env" });
@@ -34,6 +36,20 @@ app.use(express.urlencoded({ extended: true }));
 
 app.use("/uploads", express.static(path.resolve("uploads")));
 
+/* session should come before routes */
+app.use(
+  session({
+    secret: process.env.SESSION_SECRET || "captcha-secret",
+    resave: false,
+    saveUninitialized: true,
+    cookie: {
+      secure: false, // keep false for localhost
+      httpOnly: true,
+      sameSite: "lax",
+    },
+  })
+);
+
 await initDatabase();
 await verifyMailer();
 
@@ -41,6 +57,7 @@ app.get("/", (req, res) => {
   res.send("Backend is running");
 });
 
+app.use("/api/captcha", captchaRoutes);
 app.use("/api/auth", authRoutes);
 app.use("/api/profile", profileRoutes);
 app.use("/api/applications", applicationRoutes);

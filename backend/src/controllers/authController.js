@@ -120,13 +120,29 @@ export const loginUser = async (req, res) => {
 ========================= */
 export const registerUser = async (req, res) => {
   try {
-    const { username, email, password } = req.body || {};
+    const { username, email, password, captchaInput } = req.body || {};
 
-    if (!username || !email || !password) {
+    if (!username || !email || !password || !captchaInput) {
       return res.status(400).json({
-        message: "Username, email and password are required",
+        message: "Username, email, password and captcha are required",
       });
     }
+
+    const sessionCaptcha = req.session?.captcha;
+
+    if (!sessionCaptcha) {
+      return res.status(400).json({
+        message: "Captcha expired. Please refresh and try again.",
+      });
+    }
+
+    if (captchaInput.trim().toLowerCase() !== sessionCaptcha) {
+      return res.status(400).json({
+        message: "Invalid captcha entered",
+      });
+    }
+
+    delete req.session.captcha;
 
     const normalizedUsername = username.trim().toLowerCase();
     const normalizedEmail = email.trim().toLowerCase();

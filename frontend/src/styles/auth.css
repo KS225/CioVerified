@@ -102,8 +102,7 @@ body {
 
 /* Inputs + select */
 .auth-inner input,
-.auth-inner select,
-.auth-inner button {
+.auth-inner select {
   width: 100%;
   min-width: 0;
   font-family: inherit;
@@ -539,4 +538,99 @@ body {
   padding: 12px 14px;
   font-size: 14px;
   background: transparent;
+}
+.captcha-box {
+  width: 100%;
+  min-height: 84px;
+  margin: 10px 0 14px;
+  padding: 14px 16px;
+  border: 1px solid #d9dee7;
+  border-radius: 12px;
+  background: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.captcha-box > div,
+.captcha-box svg {
+  display: block;
+  max-width: 100%;
+  height: auto;
+}
+
+.captcha-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  margin-bottom: 18px;
+}
+
+.captcha-row input {
+  flex: 1;
+  width: auto;
+  min-width: 0;
+  height: 48px;
+  padding: 0 14px;
+  border: 1px solid #d9dee7;
+  border-radius: 10px;
+  font-size: 14px;
+  background: #fff;
+}
+
+.captcha-row input:focus {
+  outline: none;
+  border-color: #f59e0b;
+  box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.15);
+}
+
+.refresh-captcha-btn {
+  width: auto !important;
+  min-width: 110px;
+  flex-shrink: 0;
+  margin-top: 0 !important;
+  min-height: 48px;
+  height: 48px;
+  padding: 0 18px;
+  border: none;
+  border-radius: 10px;
+  background: linear-gradient(90deg, #f97316, #f59e0b);
+  color: #ffffff;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  font-family: inherit;
+  transition: transform 0.15s ease, box-shadow 0.2s ease, opacity 0.2s ease;
+}
+
+.refresh-captcha-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 18px rgba(249, 115, 22, 0.22);
+}
+
+.refresh-captcha-btn:active {
+  transform: translateY(0);
+}
+
+.refresh-captcha-btn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+@media (max-width: 640px) {
+  .captcha-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .captcha-row input {
+    width: 100%;
+  }
+
+  .refresh-captcha-btn {
+    width: 100% !important;
+  }
 }

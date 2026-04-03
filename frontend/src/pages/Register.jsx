@@ -15,6 +15,10 @@ function Register() {
   const [turnstileLoaded, setTurnstileLoaded] = useState(false);
   const [turnstileError, setTurnstileError] = useState("");
 
+  const [captchaSvg, setCaptchaSvg] = useState("");
+  const [captchaInput, setCaptchaInput] = useState("");
+  const [captchaError, setCaptchaError] = useState("");
+
   const [formData, setFormData] = useState({
     username: "",
     email: "",
@@ -25,7 +29,31 @@ function Register() {
   const passwordRegex =
     /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&#^()_\-+=])[A-Za-z\d@$!%*?&#^()_\-+=]{8,16}$/;
 
+  const fetchCaptcha = async () => {
+    try {
+      setCaptchaError("");
+
+      const response = await fetch("http://localhost:5000/api/captcha", {
+        method: "GET",
+        credentials: "include",
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || "Failed to load captcha");
+      }
+
+      setCaptchaSvg(data.captcha);
+    } catch (error) {
+      console.error("Captcha load error:", error);
+      setCaptchaError("Could not load captcha. Please refresh.");
+    }
+  };
+
   useEffect(() => {
+    fetchCaptcha();
+
     const renderTurnstile = () => {
       if (!window.turnstile || !turnstileRef.current) return;
       if (widgetIdRef.current !== null) return;
@@ -160,6 +188,11 @@ function Register() {
       return false;
     }
 
+    if (!captchaInput.trim()) {
+      alert("Please enter the captcha characters");
+      return false;
+    }
+
     if (!turnstileLoaded) {
       alert("Security verification is still loading. Please wait.");
       return false;
@@ -186,9 +219,12 @@ function Register() {
         email: formData.email.trim().toLowerCase(),
         password: formData.password,
         turnstileToken,
+        captchaInput,
       };
 
-      await API.post("/auth/register", payload);
+      await API.post("/auth/register", payload, {
+        withCredentials: true,
+      });
 
       alert("OTP sent to your registered email");
 
@@ -205,6 +241,8 @@ function Register() {
           "Server error. Please try again later."
       );
       resetTurnstile();
+      fetchCaptcha();
+      setCaptchaInput("");
     } finally {
       setSubmitting(false);
     }
@@ -282,6 +320,43 @@ function Register() {
             autoComplete="new-password"
             required
           />
+
+          <label>Enter the characters shown below</label>
+          <div className="captcha-box">
+            {captchaSvg ? (
+              <div
+                dangerouslySetInnerHTML={{ __html: captchaSvg }}
+              />
+            ) : (
+              <p>Loading captcha...</p>
+            )}
+          </div>
+
+          <div className="captcha-row">
+            <input
+              type="text"
+              name="captchaInput"
+              placeholder="Enter captcha"
+              value={captchaInput}
+              onChange={(e) => setCaptchaInput(e.target.value)}
+              autoComplete="off"
+              required
+            />
+            <button
+              type="button"
+              className="refresh-captcha-btn"
+              onClick={() => {
+                fetchCaptcha();
+                setCaptchaInput("");
+              }}
+            >
+              Refresh
+            </button>
+          </div>
+
+          {captchaError && (
+            <p className="turnstile-text error">{captchaError}</p>
+          )}
 
           <label>Security Verification</label>
           <div className="turnstile-wrap">
