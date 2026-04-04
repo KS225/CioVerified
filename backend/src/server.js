@@ -2,7 +2,7 @@ import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
 import path from "path";
-import { initDatabase } from "./config/initDb.js";
+import { initDatabase, db } from "./config/initDb.js";
 import session from "express-session";
 import authRoutes from "./routes/authRoutes.js";
 import profileRoutes from "./routes/profileRoutes.js";
@@ -18,6 +18,8 @@ const allowedOrigins = [
   "http://localhost:5173",
   "https://cio-verified.vercel.app",
 ];
+
+const isProduction = process.env.NODE_ENV === "production";
 
 app.use(
   cors({
@@ -36,26 +38,39 @@ app.use(express.urlencoded({ extended: true }));
 
 app.use("/uploads", express.static(path.resolve("uploads")));
 
-/* session should come before routes */
 app.use(
   session({
     secret: process.env.SESSION_SECRET || "captcha-secret",
     resave: false,
     saveUninitialized: true,
+    proxy: isProduction,
     cookie: {
-      secure: false, // keep false for localhost
+      secure: isProduction,
       httpOnly: true,
-      sameSite: "lax",
+      sameSite: isProduction ? "none" : "lax",
     },
   })
 );
 
 await initDatabase();
 
+// ✅ DB Keep Alive (every 5 minutes)
+setInterval(async () => {
+  try {
+    await db.query("SELECT 1");
+    console.log("🟢 DB keep-alive success");
+  } catch (err) {
+    console.error("🔴 DB keep-alive failed:", err.message);
+  }
+}, 5 * 60 * 1000);
+
 app.get("/", (req, res) => {
   res.send("Backend is running");
 });
 
+app.get("/health", (req, res) => {
+  res.status(200).json({ status: "OK" });
+});
 app.use("/api/captcha", captchaRoutes);
 app.use("/api/auth", authRoutes);
 app.use("/api/profile", profileRoutes);

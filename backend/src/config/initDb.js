@@ -202,3 +202,5 @@ export const initDatabase = async () => {
     console.error("❌ Error initializing database:", error);
   }
 };
+
+export { db };
