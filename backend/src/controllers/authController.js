@@ -141,20 +141,34 @@ export const registerUser = async (req, res) => {
       delete req.session.captcha;
       delete req.session.captchaExpiresAt;
 
-      return res.status(400).json({
-        message: "Captcha expired. Please refresh and try again.",
+      return req.session.save(() => {
+        return res.status(400).json({
+          message: "Captcha expired. Please refresh and try again.",
+        });
       });
     }
 
     if (captchaInput.trim() !== sessionCaptcha) {
-      return res.status(400).json({
-        message:
-          "Invalid captcha entered. Please match uppercase and lowercase exactly.",
+      delete req.session.captcha;
+      delete req.session.captchaExpiresAt;
+
+      return req.session.save(() => {
+        return res.status(400).json({
+          message:
+            "Invalid captcha entered. Please refresh and enter it exactly as shown.",
+        });
       });
     }
 
     delete req.session.captcha;
     delete req.session.captchaExpiresAt;
+
+    await new Promise((resolve, reject) => {
+      req.session.save((err) => {
+        if (err) return reject(err);
+        resolve();
+      });
+    });
 
     const normalizedUsername = username.trim().toLowerCase();
     const normalizedEmail = email.trim().toLowerCase();

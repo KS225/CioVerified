@@ -13,6 +13,7 @@ import { verifyMailer } from "./utils/mailer.js";
 dotenv.config({ path: "../.env" });
 
 const app = express();
+app.set("trust proxy", 1);
 
 const allowedOrigins = [
   "http://localhost:5173",
@@ -54,7 +55,7 @@ app.use(
 
 await initDatabase();
 
-// ✅ DB Keep Alive (every 5 minutes)
+// DB Keep Alive
 setInterval(async () => {
   try {
     await db.query("SELECT 1");
@@ -71,6 +72,7 @@ app.get("/", (req, res) => {
 app.get("/health", (req, res) => {
   res.status(200).json({ status: "OK" });
 });
+
 app.use("/api/captcha", captchaRoutes);
 app.use("/api/auth", authRoutes);
 app.use("/api/profile", profileRoutes);

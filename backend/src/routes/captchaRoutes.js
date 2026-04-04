@@ -18,10 +18,19 @@ router.get("/", (req, res) => {
   req.session.captcha = captcha.text;
   req.session.captchaExpiresAt = Date.now() + 2 * 60 * 1000;
 
-  res.status(200).json({
-    captcha: captcha.data,
-    expiresIn: 120,
-    message: "Enter the characters exactly as shown",
+  req.session.save((err) => {
+    if (err) {
+      console.error("❌ Session save error:", err);
+      return res.status(500).json({
+        message: "Failed to generate captcha session",
+      });
+    }
+
+    return res.status(200).json({
+      captcha: captcha.data,
+      expiresIn: 120,
+      message: "Enter the characters exactly as shown",
+    });
   });
 });
 
