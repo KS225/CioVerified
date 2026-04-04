@@ -1,46 +1,125 @@
-import { Resend } from "resend";
-
-const resend = new Resend(process.env.RESEND_API_KEY);
+import nodemailer from "nodemailer";
 
 /* =========================
-   DEBUG (VERY IMPORTANT)
+   ENV CHECKS
 ========================= */
-console.log(
-  "🔑 RESEND KEY PREFIX:",
-  process.env.RESEND_API_KEY?.slice(0, 8)
-);
+const requiredEnv = ["EMAIL_USER", "EMAIL_PASS"];
+
+for (const key of requiredEnv) {
+  if (!process.env[key]) {
+    console.warn(`⚠️ Missing environment variable: ${key}`);
+  }
+}
+
+/* =========================
+   TRANSPORTER
+========================= */
+const transporter = nodemailer.createTransport({
+  service: "gmail",
+  auth: {
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASS, // Gmail App Password
+  },
+  tls: {
+    rejectUnauthorized: false, // testing server workaround
+  },
+});
+
+/* =========================
+   HTML WRAPPER
+========================= */
+const getBaseTemplate = ({ title, bodyHtml }) => {
+  return `
+    <div style="margin:0;padding:0;background:#f6f8fb;font-family:Arial,sans-serif;">
+      <div style="max-width:600px;margin:30px auto;background:#ffffff;border:1px solid #e5e7eb;border-radius:10px;overflow:hidden;">
+        <div style="background:linear-gradient(90deg,#ff7a00,#ff9f43);padding:18px 24px;">
+          <h2 style="margin:0;color:#ffffff;font-size:22px;">CIO Verified</h2>
+        </div>
+
+        <div style="padding:30px 24px;color:#1f2937;line-height:1.6;">
+          <h3 style="margin-top:0;color:#111827;">${title}</h3>
+          ${bodyHtml}
+        </div>
+
+        <div style="padding:16px 24px;background:#f9fafb;color:#6b7280;font-size:12px;border-top:1px solid #e5e7eb;">
+          This is an automated email from CIO Verified. Please do not reply directly to this message.
+        </div>
+      </div>
+    </div>
+  `;
+};
+
+/* =========================
+   SEND RAW EMAIL
+========================= */
+export const sendEmail = async ({ to, subject, html, text }) => {
+  try {
+    const info = await transporter.sendMail({
+      from: `"CIO Verified" <${process.env.EMAIL_USER}>`,
+      to,
+      subject,
+      html,
+      text,
+    });
+
+    console.log("✅ Email sent successfully");
+    console.log("📨 Message ID:", info.messageId);
+
+    return info;
+  } catch (err) {
+    console.error("❌ Email send failed:", err.message);
+    throw new Error(`Email send failed: ${err.message}`);
+  }
+};
 
 /* =========================
    SEND OTP
 ========================= */
 export const sendOTP = async (email, otp, type = "verify") => {
   try {
-    const subject =
-      type === "reset" ? "Password Reset OTP" : "Email Verification OTP";
+    const isReset = type === "reset";
 
-    const title =
-      type === "reset" ? "Reset Your Password" : "Verify Your Email";
+    const subject = isReset
+      ? "Password Reset OTP - CIO Verified"
+      : "Email Verification OTP - CIO Verified";
 
-    const { data, error } = await resend.emails.send({
-      from: "CIO Verified <onboarding@resend.dev>",
-      to: email,
-      subject,
-      html: `
-        <div style="font-family: Arial; padding: 20px;">
-          <h2 style="color:#ff7a00;">${title}</h2>
-          <p>Your OTP is:</p>
-          <h1 style="letter-spacing:4px;">${otp}</h1>
-          <p>This OTP will expire in 5 minutes.</p>
+    const title = isReset ? "Reset Your Password" : "Verify Your Email";
+
+    const html = getBaseTemplate({
+      title,
+      bodyHtml: `
+        <p>Hello,</p>
+        <p>Your OTP is:</p>
+
+        <div style="margin:20px 0;text-align:center;">
+          <div style="
+            display:inline-block;
+            padding:14px 24px;
+            font-size:28px;
+            font-weight:bold;
+            letter-spacing:6px;
+            color:#ff7a00;
+            border:2px dashed #ffb066;
+            border-radius:8px;
+            background:#fff7ed;
+          ">
+            ${otp}
+          </div>
         </div>
+
+        <p>This OTP will expire in <strong>5 minutes</strong>.</p>
+        <p>If you did not request this, you can safely ignore this email.</p>
       `,
     });
 
-    console.log("📨 RESEND DATA:", data);
-    console.log("⚠️ RESEND ERROR:", error);
+    const text = `${title}\n\nYour OTP is: ${otp}\nThis OTP will expire in 5 minutes.`;
 
-    if (error) {
-      throw new Error(error.message);
-    }
+    await sendEmail({
+      to: email,
+      subject,
+      html,
+      text,
+    });
 
     console.log("✅ OTP email sent to:", email);
   } catch (err) {
@@ -54,29 +133,45 @@ export const sendOTP = async (email, otp, type = "verify") => {
 ========================= */
 export const sendInviteEmail = async (email, role, link) => {
   try {
-    const { data, error } = await resend.emails.send({
-      from: "CIO Verified <onboarding@resend.dev>",
-      to: email,
-      subject: `Invitation to join as ${role}`,
-      html: `
-        <div style="font-family: Arial; padding: 20px;">
-          <h2 style="color:#ff7a00;">You're Invited 🎉</h2>
-          <p>You have been invited as:</p>
-          <h3>${role}</h3>
-          <a href="${link}" 
-             style="padding:10px 15px;background:#ff7a00;color:#fff;text-decoration:none;">
+    const subject = `Invitation to join as ${role} - CIO Verified`;
+
+    const html = getBaseTemplate({
+      title: "You're Invited",
+      bodyHtml: `
+        <p>Hello,</p>
+        <p>You have been invited to join <strong>CIO Verified</strong> as:</p>
+        <p style="font-size:18px;font-weight:bold;color:#111827;">${role}</p>
+
+        <div style="margin:24px 0;">
+          <a
+            href="${link}"
+            style="
+              display:inline-block;
+              padding:12px 20px;
+              background:#ff7a00;
+              color:#ffffff;
+              text-decoration:none;
+              border-radius:6px;
+              font-weight:bold;
+            "
+          >
             Complete Profile
           </a>
         </div>
+
+        <p>If the button does not work, copy and paste this link into your browser:</p>
+        <p style="word-break:break-all;color:#2563eb;">${link}</p>
       `,
     });
 
-    console.log("📨 RESEND DATA:", data);
-    console.log("⚠️ RESEND ERROR:", error);
+    const text = `You have been invited as ${role}.\nComplete profile here: ${link}`;
 
-    if (error) {
-      throw new Error(error.message);
-    }
+    await sendEmail({
+      to: email,
+      subject,
+      html,
+      text,
+    });
 
     console.log("✅ Invite email sent to:", email);
   } catch (err) {
@@ -86,39 +181,20 @@ export const sendInviteEmail = async (email, role, link) => {
 };
 
 /* =========================
-   GENERIC EMAIL
-========================= */
-export const sendEmail = async ({ to, subject, html }) => {
-  try {
-    const { data, error } = await resend.emails.send({
-      from: "CIO Verified <onboarding@resend.dev>",
-      to,
-      subject,
-      html,
-    });
-
-    console.log("📨 RESEND DATA:", data);
-    console.log("⚠️ RESEND ERROR:", error);
-
-    if (error) {
-      throw new Error(error.message);
-    }
-
-    console.log("✅ Email sent to:", to);
-  } catch (err) {
-    console.error("❌ Email error:", err.message);
-    throw err;
-  }
-};
-
-/* =========================
    VERIFY MAILER
 ========================= */
 export const verifyMailer = async () => {
-  if (!process.env.RESEND_API_KEY) {
-    console.error("❌ RESEND_API_KEY missing in env");
-    throw new Error("Missing RESEND_API_KEY");
-  }
+  try {
+    if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
+      throw new Error("Missing EMAIL_USER or EMAIL_PASS in environment variables");
+    }
 
-  console.log("✅ Resend mailer ready");
+    await transporter.verify();
+
+    console.log("✅ Gmail mailer ready");
+    console.log("📧 EMAIL_USER:", process.env.EMAIL_USER);
+  } catch (err) {
+    console.error("❌ Mail transporter verification failed:", err.message);
+    throw err;
+  }
 };
