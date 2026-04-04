@@ -372,6 +372,7 @@ function Register() {
             <input
               type="text"
               name="captchaInput"
+              className="captcha-input"
               placeholder="Enter captcha"
               value={captchaInput}
               onChange={(e) => setCaptchaInput(e.target.value)}
