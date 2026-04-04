@@ -1,8 +1,5 @@
 import nodemailer from "nodemailer";
 
-/* =========================
-   ENV CHECKS
-========================= */
 const requiredEnv = ["EMAIL_USER", "EMAIL_PASS"];
 
 for (const key of requiredEnv) {
@@ -11,23 +8,19 @@ for (const key of requiredEnv) {
   }
 }
 
-/* =========================
-   TRANSPORTER
-========================= */
 const transporter = nodemailer.createTransport({
-  service: "gmail",
+  host: "smtp.gmail.com",
+  port: 587,
+  secure: false,
   auth: {
     user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS, // Gmail App Password
+    pass: process.env.EMAIL_PASS,
   },
   tls: {
-    rejectUnauthorized: false, // testing server workaround
+    rejectUnauthorized: false,
   },
 });
 
-/* =========================
-   HTML WRAPPER
-========================= */
 const getBaseTemplate = ({ title, bodyHtml }) => {
   return `
     <div style="margin:0;padding:0;background:#f6f8fb;font-family:Arial,sans-serif;">
@@ -49,9 +42,6 @@ const getBaseTemplate = ({ title, bodyHtml }) => {
   `;
 };
 
-/* =========================
-   SEND RAW EMAIL
-========================= */
 export const sendEmail = async ({ to, subject, html, text }) => {
   try {
     const info = await transporter.sendMail({
@@ -72,9 +62,6 @@ export const sendEmail = async ({ to, subject, html, text }) => {
   }
 };
 
-/* =========================
-   SEND OTP
-========================= */
 export const sendOTP = async (email, otp, type = "verify") => {
   try {
     const isReset = type === "reset";
@@ -128,9 +115,6 @@ export const sendOTP = async (email, otp, type = "verify") => {
   }
 };
 
-/* =========================
-   INVITE EMAIL
-========================= */
 export const sendInviteEmail = async (email, role, link) => {
   try {
     const subject = `Invitation to join as ${role} - CIO Verified`;
@@ -180,9 +164,6 @@ export const sendInviteEmail = async (email, role, link) => {
   }
 };
 
-/* =========================
-   VERIFY MAILER
-========================= */
 export const verifyMailer = async () => {
   try {
     if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
@@ -190,7 +171,6 @@ export const verifyMailer = async () => {
     }
 
     await transporter.verify();
-
     console.log("✅ Gmail mailer ready");
     console.log("📧 EMAIL_USER:", process.env.EMAIL_USER);
   } catch (err) {

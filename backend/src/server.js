@@ -2,6 +2,7 @@ import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
 import path from "path";
+import dns from "dns";
 import { initDatabase, db } from "./config/initDb.js";
 import authRoutes from "./routes/authRoutes.js";
 import profileRoutes from "./routes/profileRoutes.js";
@@ -9,19 +10,11 @@ import applicationRoutes from "./routes/applicationRoutes.js";
 import captchaRoutes from "./routes/captchaRoutes.js";
 import { verifyMailer } from "./utils/mailer.js";
 
-/* =========================
-   ENV CONFIG (WORKS EVERYWHERE)
-========================= */
 dotenv.config();
+dns.setDefaultResultOrder("ipv4first");
 
-/* =========================
-   APP INIT
-========================= */
 const app = express();
 
-/* =========================
-   CORS CONFIG (FIXED)
-========================= */
 const allowedOrigins = [
   "http://localhost:5173",
   "https://cio-verified.vercel.app",
@@ -32,7 +25,6 @@ app.use(
     origin: function (origin, callback) {
       console.log("🌍 Incoming origin:", origin);
 
-      // allow requests with no origin (Postman, mobile apps)
       if (!origin) return callback(null, true);
 
       if (allowedOrigins.includes(origin)) {
@@ -47,25 +39,13 @@ app.use(
   })
 );
 
-/* =========================
-   MIDDLEWARE
-========================= */
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-/* =========================
-   STATIC FILES
-========================= */
 app.use("/uploads", express.static(path.resolve("uploads")));
 
-/* =========================
-   DB INIT
-========================= */
 await initDatabase();
 
-/* =========================
-   DB KEEP ALIVE
-========================= */
 setInterval(async () => {
   try {
     await db.query("SELECT 1");
@@ -75,9 +55,6 @@ setInterval(async () => {
   }
 }, 5 * 60 * 1000);
 
-/* =========================
-   ROUTES
-========================= */
 app.get("/", (req, res) => {
   res.send("Backend is running");
 });
@@ -91,18 +68,12 @@ app.use("/api/auth", authRoutes);
 app.use("/api/profile", profileRoutes);
 app.use("/api/applications", applicationRoutes);
 
-/* =========================
-   SERVER START
-========================= */
 const PORT = process.env.PORT || 5000;
 
 app.listen(PORT, "0.0.0.0", () => {
   console.log(`🚀 Server running on port ${PORT}`);
 });
 
-/* =========================
-   MAILER VERIFY
-========================= */
 verifyMailer().catch((error) => {
   console.error("❌ Mail transporter verification failed:", error.message);
 });
