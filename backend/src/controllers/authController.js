@@ -137,7 +137,14 @@ export const registerUser = async (req, res) => {
       });
     }
 
-    if (Date.now() > captchaExpiresAt) {
+    const now = Date.now();
+    const expiresAt = Number(captchaExpiresAt);
+
+    console.log("NOW:", now);
+    console.log("CAPTCHA EXPIRES AT:", expiresAt);
+    console.log("TIME LEFT:", expiresAt - now);
+
+    if (now > expiresAt) {
       delete req.session.captcha;
       delete req.session.captchaExpiresAt;
 
