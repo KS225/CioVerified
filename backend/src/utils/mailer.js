@@ -1,5 +1,9 @@
 import nodemailer from "nodemailer";
+import dns from "dns/promises";
 
+/* =========================
+   ENV CHECK
+========================= */
 const requiredEnv = ["EMAIL_USER", "EMAIL_PASS"];
 
 for (const key of requiredEnv) {
@@ -8,19 +12,45 @@ for (const key of requiredEnv) {
   }
 }
 
-const transporter = nodemailer.createTransport({
-  host: "smtp.gmail.com",
-  port: 587,
-  secure: false,
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS,
-  },
-  tls: {
-    rejectUnauthorized: false,
-  },
-});
+/* =========================
+   RESOLVE GMAIL TO IPV4
+========================= */
+const GMAIL_HOST = "smtp.gmail.com";
 
+async function createTransporter() {
+  let resolvedHost = GMAIL_HOST;
+
+  try {
+    const ipv4List = await dns.resolve4(GMAIL_HOST);
+    if (ipv4List?.length) {
+      resolvedHost = ipv4List[0];
+      console.log("📡 Using Gmail IPv4:", resolvedHost);
+    }
+  } catch (err) {
+    console.warn("⚠️ IPv4 resolve failed, falling back to hostname:", err.message);
+  }
+
+  return nodemailer.createTransport({
+    host: resolvedHost,
+    port: 587,
+    secure: false,
+    auth: {
+      user: process.env.EMAIL_USER,
+      pass: process.env.EMAIL_PASS, // Gmail app password
+    },
+    tls: {
+      servername: GMAIL_HOST,
+      rejectUnauthorized: false,
+    },
+    connectionTimeout: 20000,
+    greetingTimeout: 20000,
+    socketTimeout: 30000,
+  });
+}
+
+/* =========================
+   HTML WRAPPER
+========================= */
 const getBaseTemplate = ({ title, bodyHtml }) => {
   return `
     <div style="margin:0;padding:0;background:#f6f8fb;font-family:Arial,sans-serif;">
@@ -42,8 +72,13 @@ const getBaseTemplate = ({ title, bodyHtml }) => {
   `;
 };
 
+/* =========================
+   SEND RAW EMAIL
+========================= */
 export const sendEmail = async ({ to, subject, html, text }) => {
   try {
+    const transporter = await createTransporter();
+
     const info = await transporter.sendMail({
       from: `"CIO Verified" <${process.env.EMAIL_USER}>`,
       to,
@@ -62,6 +97,9 @@ export const sendEmail = async ({ to, subject, html, text }) => {
   }
 };
 
+/* =========================
+   SEND OTP
+========================= */
 export const sendOTP = async (email, otp, type = "verify") => {
   try {
     const isReset = type === "reset";
@@ -115,6 +153,9 @@ export const sendOTP = async (email, otp, type = "verify") => {
   }
 };
 
+/* =========================
+   INVITE EMAIL
+========================= */
 export const sendInviteEmail = async (email, role, link) => {
   try {
     const subject = `Invitation to join as ${role} - CIO Verified`;
@@ -164,13 +205,18 @@ export const sendInviteEmail = async (email, role, link) => {
   }
 };
 
+/* =========================
+   VERIFY MAILER
+========================= */
 export const verifyMailer = async () => {
   try {
     if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
       throw new Error("Missing EMAIL_USER or EMAIL_PASS in environment variables");
     }
 
+    const transporter = await createTransporter();
     await transporter.verify();
+
     console.log("✅ Gmail mailer ready");
     console.log("📧 EMAIL_USER:", process.env.EMAIL_USER);
   } catch (err) {
