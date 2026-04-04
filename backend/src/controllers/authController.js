@@ -1,6 +1,7 @@
 import db from "../config/db.js";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
+import { getCaptchaStore } from "../routes/captchaRoutes.js";
 import { sendOTP } from "../utils/mailer.js";
 
 const SOURCE_MAP = {
@@ -120,62 +121,42 @@ export const loginUser = async (req, res) => {
 ========================= */
 export const registerUser = async (req, res) => {
   try {
-    const { username, email, password, captchaInput } = req.body || {};
+    const { username, email, password, captchaInput, captchaId } = req.body || {};
 
-    if (!username || !email || !password || !captchaInput) {
+    if (!username || !email || !password || !captchaInput || !captchaId) {
       return res.status(400).json({
-        message: "Username, email, password and captcha are required",
+        message: "Username, email, password, captcha and captchaId are required",
       });
     }
 
-    const sessionCaptcha = req.session?.captcha;
-    const captchaExpiresAt = req.session?.captchaExpiresAt;
+    const captchaStore = getCaptchaStore();
+    const captchaEntry = captchaStore.get(captchaId);
 
-    if (!sessionCaptcha || !captchaExpiresAt) {
+    if (!captchaEntry) {
       return res.status(400).json({
         message: "Captcha expired. Please refresh and try again.",
       });
     }
 
     const now = Date.now();
-    const expiresAt = Number(captchaExpiresAt);
-
-    console.log("NOW:", now);
-    console.log("CAPTCHA EXPIRES AT:", expiresAt);
-    console.log("TIME LEFT:", expiresAt - now);
+    const expiresAt = Number(captchaEntry.expiresAt);
 
     if (now > expiresAt) {
-      delete req.session.captcha;
-      delete req.session.captchaExpiresAt;
-
-      return req.session.save(() => {
-        return res.status(400).json({
-          message: "Captcha expired. Please refresh and try again.",
-        });
+      captchaStore.delete(captchaId);
+      return res.status(400).json({
+        message: "Captcha expired. Please refresh and try again.",
       });
     }
 
-    if (captchaInput.trim() !== sessionCaptcha) {
-      delete req.session.captcha;
-      delete req.session.captchaExpiresAt;
-
-      return req.session.save(() => {
-        return res.status(400).json({
-          message:
-            "Invalid captcha entered. Please refresh and enter it exactly as shown.",
-        });
+    if (captchaInput.trim() !== captchaEntry.text) {
+      captchaStore.delete(captchaId);
+      return res.status(400).json({
+        message:
+          "Invalid captcha entered. Please refresh and enter it exactly as shown.",
       });
     }
 
-    delete req.session.captcha;
-    delete req.session.captchaExpiresAt;
-
-    await new Promise((resolve, reject) => {
-      req.session.save((err) => {
-        if (err) return reject(err);
-        resolve();
-      });
-    });
+    captchaStore.delete(captchaId);
 
     const normalizedUsername = username.trim().toLowerCase();
     const normalizedEmail = email.trim().toLowerCase();
