@@ -129,20 +129,32 @@ export const registerUser = async (req, res) => {
     }
 
     const sessionCaptcha = req.session?.captcha;
+    const captchaExpiresAt = req.session?.captchaExpiresAt;
 
-    if (!sessionCaptcha) {
+    if (!sessionCaptcha || !captchaExpiresAt) {
       return res.status(400).json({
         message: "Captcha expired. Please refresh and try again.",
       });
     }
 
-    if (captchaInput.trim().toLowerCase() !== sessionCaptcha) {
+    if (Date.now() > captchaExpiresAt) {
+      delete req.session.captcha;
+      delete req.session.captchaExpiresAt;
+
       return res.status(400).json({
-        message: "Invalid captcha entered",
+        message: "Captcha expired. Please refresh and try again.",
+      });
+    }
+
+    if (captchaInput.trim() !== sessionCaptcha) {
+      return res.status(400).json({
+        message:
+          "Invalid captcha entered. Please match uppercase and lowercase exactly.",
       });
     }
 
     delete req.session.captcha;
+    delete req.session.captchaExpiresAt;
 
     const normalizedUsername = username.trim().toLowerCase();
     const normalizedEmail = email.trim().toLowerCase();
@@ -211,7 +223,6 @@ export const registerUser = async (req, res) => {
     return res.status(500).json({ message: "Failed to process registration" });
   }
 };
-
 /* =========================
    VERIFY OTP + CREATE ORG
 ========================= */

@@ -18,6 +18,12 @@ function Register() {
   const [captchaSvg, setCaptchaSvg] = useState("");
   const [captchaInput, setCaptchaInput] = useState("");
   const [captchaError, setCaptchaError] = useState("");
+  const [captchaExpiresIn, setCaptchaExpiresIn] = useState(0);
+  const formatCaptchaTime = (seconds) => {
+  const mins = Math.floor(seconds / 60);
+  const secs = seconds % 60;
+  return `${mins}:${secs.toString().padStart(2, "0")}`;
+};
 
   const [formData, setFormData] = useState({
     username: "",
@@ -30,26 +36,31 @@ function Register() {
     /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&#^()_\-+=])[A-Za-z\d@$!%*?&#^()_\-+=]{8,16}$/;
 
   const fetchCaptcha = async () => {
-    try {
-      setCaptchaError("");
+  try {
+    setCaptchaError("");
+    setCaptchaInput("");
 
-      const response = await fetch("http://localhost:5000/api/captcha", {
+    const response = await fetch(
+      `${import.meta.env.VITE_API_BASE_URL}/captcha`,
+      {
         method: "GET",
         credentials: "include",
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.message || "Failed to load captcha");
       }
+    );
 
-      setCaptchaSvg(data.captcha);
-    } catch (error) {
-      console.error("Captcha load error:", error);
-      setCaptchaError("Could not load captcha. Please refresh.");
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.message || "Failed to load captcha");
     }
-  };
+
+    setCaptchaSvg(data.captcha);
+    setCaptchaExpiresIn(data.expiresIn || 120);
+  } catch (error) {
+    console.error("Captcha load error:", error);
+    setCaptchaError("Could not load captcha. Please refresh.");
+  }
+};
 
   useEffect(() => {
     fetchCaptcha();
@@ -122,6 +133,24 @@ function Register() {
       script.onload = null;
     };
   }, []);
+
+  useEffect(() => {
+  if (captchaExpiresIn <= 0) return;
+
+  const timer = setInterval(() => {
+    setCaptchaExpiresIn((prev) => {
+      if (prev <= 1) {
+        clearInterval(timer);
+        fetchCaptcha(); // auto refresh
+        return 0;
+      }
+      return prev - 1;
+    });
+  }, 1000);
+
+  return () => clearInterval(timer);
+}, [captchaExpiresIn]);
+
 
   const resetTurnstile = () => {
     setTurnstileToken("");
@@ -331,6 +360,13 @@ function Register() {
               <p>Loading captcha...</p>
             )}
           </div>
+
+          <div className="captcha-meta">
+  <span className="captcha-note">Case-sensitive</span>
+  <span className="captcha-timer">
+    Expires in: {formatCaptchaTime(captchaExpiresIn)}
+  </span>
+</div>
 
           <div className="captcha-row">
             <input
