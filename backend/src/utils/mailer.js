@@ -1,7 +1,9 @@
 import nodemailer from "nodemailer";
 
 const transporter = nodemailer.createTransport({
-  service: "gmail",
+  host: "smtp.gmail.com",
+  port: 587,
+  secure: false,
   auth: {
     user: process.env.EMAIL_USER,
     pass: process.env.EMAIL_PASS,
@@ -16,7 +18,7 @@ export const verifyMailer = async () => {
     await transporter.verify();
     console.log("✅ Mail transporter verified");
   } catch (err) {
-    console.error("❌ Mail transporter verification failed:", err);
+    console.error("❌ Mail transporter verification failed:", err.message);
     throw err;
   }
 };
@@ -47,7 +49,7 @@ export const sendOTP = async (email, otp, type = "verify") => {
 
     console.log("✅ OTP email sent to:", email);
   } catch (err) {
-    console.error("❌ OTP email failed:", err);
+    console.error("❌ OTP email failed:", err.message);
     throw err;
   }
 };
@@ -78,7 +80,7 @@ export const sendInviteEmail = async (email, role, link) => {
 
     console.log("✅ Invite email sent to:", email);
   } catch (err) {
-    console.error("❌ Invite email failed:", err);
+    console.error("❌ Invite email failed:", err.message);
     throw err;
   }
 };
@@ -94,7 +96,7 @@ export const sendEmail = async ({ to, subject, html }) => {
 
     console.log("✅ Email sent to:", to);
   } catch (err) {
-    console.error("❌ Email error:", err);
+    console.error("❌ Email error:", err.message);
     throw err;
   }
 };

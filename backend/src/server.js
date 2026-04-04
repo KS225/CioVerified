@@ -51,7 +51,6 @@ app.use(
 );
 
 await initDatabase();
-await verifyMailer();
 
 app.get("/", (req, res) => {
   res.send("Backend is running");
@@ -66,4 +65,8 @@ const PORT = process.env.PORT || 5000;
 
 app.listen(PORT, "0.0.0.0", () => {
   console.log(`🚀 Server running on port ${PORT}`);
+});
+
+verifyMailer().catch((error) => {
+  console.error("❌ Mail transporter verification failed:", error.message);
 });
